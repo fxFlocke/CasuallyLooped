@@ -23,11 +23,9 @@ export const globalReducer = (state: any, action: any)=>{
             }}
         } 
         case "CHANGE_EDIT":{
-            if(action.data === "ink"){
-                state.node = initialNode;
-            }
+            state.node = action.data;
             return { ...state, config: {
-                editMode: action.data,
+                editMode: "ink",
                 node: state.node,
                 egde: state.edge,
                 geometries: state.geometries
@@ -35,8 +33,8 @@ export const globalReducer = (state: any, action: any)=>{
         }
         case "CHANGE_LABEL":{
             return { ...state, config: {
-                editMode: action.data,
-                node: state.node,
+                editMode: "ink",
+                node: action.data,
                 egde: state.edge,
                 geometries: state.geometries
             }}

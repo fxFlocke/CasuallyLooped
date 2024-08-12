@@ -1,5 +1,5 @@
 import { InformationBar } from "./informationbar";
-import {useContext } from "react";
+import {useContext, useEffect } from "react";
 import { Configuration } from "@/datatypes/commondatatypes";
 import { NodeBar } from "./nodebar";
 import { EdgeBar } from "./edgebar";
@@ -8,6 +8,10 @@ import { AppContext } from "@/state/global";
 
 export function Topbar() {
   const [appState, dispatch] = useContext(AppContext);
+
+  useEffect(() => {
+    console.log(appState.config.editMode)
+  }, [appState.config.editMode])
 
   return (
     <div className="flex flex-col">

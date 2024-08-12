@@ -36,7 +36,6 @@ var editingIndex: number = -1;
 
 export function Loopy() {
 
-  const [nodesChanged, setNodesChanged] = useState(false);
   const [color, setColor] = useState<string>("#000");
   const { canvasRef, onMouseDown, mouseClick, clear } = useDraw(drawLine);
   const [appState, dispatch] = useContext(AppContext);
@@ -65,13 +64,18 @@ export function Loopy() {
       let nodeID = getNodeByPoint(mouseClick)
       if(nodeID !== -1){
         editingIndex = nodeID
-        dispatch({type: "CHANGE_NODE", data: activeNodes[searchNodeIndexById(nodeID)].node})
+        dispatch({type: "CHANGE_EDIT", data: activeNodes[searchNodeIndexById(nodeID)].node})
+        console.log(editingIndex)
       }else{
         editingIndex = -1
         DrawNodes()
       }
     }
   }, [mouseClick])
+
+  useEffect(() => {
+    //updateNode()
+  }, [appState])
 
   return (
     <>
@@ -115,9 +119,7 @@ function createNode(point: Point) {
       edges: [],
     };
     activeNodes.push(nodeElement);
-    console.log(editingIndex)
     editingIndex = node.id;
-    console.log(editingIndex)
   }
 
   function drawLine({ prevPoint, currentPoint, ctx }: Draw) {
@@ -264,13 +266,15 @@ function createNode(point: Point) {
     return -1
   }
 
-  function updateNode(index: number, config: NodeConfiguration) {
-    let nodeElems = activeNodes;
-    nodeElems[index].config = config;
-    nodeElems[index].node.label = config.label;
-    nodeElems[index].node.value = config.startValue;
-    activeNodes = nodeElems;
-    setNodesChanged(!nodesChanged);
+  function updateNode() {
+    if(editingIndex === undefined || editingIndex === -1 || appState.config.node === undefined){
+      return
+    }
+    console.log('editingIndex for update: ', editingIndex)
+    let config = appState.config.node
+   // console.log("updated with: ", config)
+    activeNodes[editingIndex - 1].config = config;
+    //DrawNodes()
   }
 
   function searchNodeIndexById(id: number) {

@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { AppContext } from "@/state/global";
+import { NodeConfiguration } from "@/datatypes/commondatatypes";
 
 export function LabelCard() {
   const [ appState, dispatch ] = useContext(AppContext);
@@ -18,9 +19,16 @@ export function LabelCard() {
             type="text"
             id="label"
             value={appState.config.node.label}
-            onInput={(e: React.ChangeEvent<HTMLInputElement>) =>
-              dispatch({type:"CHANGE_LABEL", data: e.target.value})
-            }
+            onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
+              let newNode: NodeConfiguration = {
+                id: appState.node.id,
+                startValue: appState.node.value,
+                label: e.target.value,
+                hue: appState.node.hue,
+                radius: appState.node.radius
+              }
+              dispatch({type:"CHANGE_LABEL", data: newNode})
+            }}
             className="bg-gray-30 border border-gray-100 text-gray-900 text-sm rounded-lg focus:ring-blue-100 focus:border-blue-100 block w-[125px] p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-100 dark:focus:border-blue-100"
             required
           />

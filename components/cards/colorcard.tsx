@@ -20,7 +20,7 @@ export function ColorCard() {
             alt="Profilbild"
             width={150}
             height={150}
-            className="rounded-xl mt-2"
+            className="rounded-xl mt-2 w-auto h-auto"
           />
         </div>
       </div>
