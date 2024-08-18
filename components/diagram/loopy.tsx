@@ -8,11 +8,12 @@ import {
   NodeGeometry,
   Position,
 } from "@/datatypes/commondatatypes";
+import { StateRadiusChange } from "@/datatypes/stateTransitions";
 import { Draw, Point, useDraw } from "@/hooks/usedraw";
 import { Node } from "@/datatypes/commondatatypes";
 import { NodeComponent } from "./node";
 import { AppContext } from "@/state/global";
-import { IsPointInNode } from "@/functionality/geometry";
+import { IsPointInNode, DrawText } from "@/functionality/geometry";
 import { RefObject } from "react";
 import { ColorCollection, MathCollection } from "@/datatypes/collections";
 
@@ -30,9 +31,7 @@ var defaultConfiguration: Configuration = {
   geometries: []
 };
 
-var activeNodes: NodeElement[] = [];
 var activePoints: Point[] = [];
-var editingIndex: number = -1;
 
 export function Loopy() {
 
@@ -50,7 +49,7 @@ export function Loopy() {
     var startNodeID = getNodeByPoint(startPoint);
     var endNodeID = getNodeByPoint(endPoint);
     if ((startNodeID !== -1) && (endNodeID !== -1)) {
-      createEdge(activeNodes[startNodeID].node, activeNodes[endNodeID].node)
+      // createEdge(activeNodes[startNodeID].node, activeNodes[endNodeID].node)
       return;
     } else if (startNodeID === -1) {
       createNode(endPoint);
@@ -60,16 +59,17 @@ export function Loopy() {
   }, [onMouseDown]);
 
   useEffect(() => {
-    if(activeNodes !== undefined){
-      let nodeID = getNodeByPoint(mouseClick)
-      if(nodeID !== -1){
-        editingIndex = nodeID
-        dispatch({type: "CHANGE_EDIT", data: activeNodes[searchNodeIndexById(nodeID)].node})
-        console.log(editingIndex)
-      }else{
-        editingIndex = -1
-        DrawNodes()
-      }
+    let nodeID = getNodeByPoint(mouseClick)
+    if (nodeID !== -1){
+      dispatch({type: "CHANGE_EDITING_INDEX", data: nodeID})
+      dispatch({type: "CHANGE_NODE", data: appState.config.nodes[searchNodeIndexById(nodeID)].node})
+      return
+    }
+
+    if (isPointInCanvas(mouseClick)){
+      dispatch({type: "CHANGE_EDITING_INDEX", data: -1})
+      dispatch({type: "CHANGE_NODE", data: defaultConfiguration.node})
+      return
     }
   }, [mouseClick])
 
@@ -84,7 +84,14 @@ export function Loopy() {
       </div>
         <div className="pl-8 pr-8 2 pt-28 pb-8">
           <canvas
-            className="cursor-[url('/resizedIcons/ink.png'),_pointer] w-[1200px] h-[800px] bg-[#28435a] rounded-2xl border-t border-b bg-opacity-90"
+            className={`w-[1200px] h-[800px] bg-[#28435a] rounded-2xl border-t border-b bg-opacity-90
+                  ${
+                    appState.config.editMode === "ink" && "cursor-[url('/resizedIcons/ink.png'),_pointer]" ||
+                    appState.config.editMode === "text" && "cursor-[url('/resizedIcons/text.png'),_pointer]" ||
+                    appState.config.editMode === "drag" && "cursor-[url('/resizedIcons/drag.png'),_pointer]" ||
+                    appState.config.editMode === "erase" && "cursor-[url('/resizedIcons/erase.png'),_pointer]"
+                  }
+              "`}
             ref={canvasRef}
             onMouseDown={onMouseDown}
             width={1200}
@@ -105,7 +112,7 @@ function createNode(point: Point) {
         y: point.y,
       },
       label: "",
-      value: 0,
+      value: 0.5,
       edges: [],
     };
     let nodeElement: NodeElement = {
@@ -118,8 +125,9 @@ function createNode(point: Point) {
       },
       edges: [],
     };
-    activeNodes.push(nodeElement);
-    editingIndex = node.id;
+    appState.config.nodes.push(nodeElement);
+    dispatch({type: "CHANGE_EDITING_INDEX", data: node.id})
+    dispatch({type: "CHANGE_NODE", data: node})
   }
 
   function drawLine({ prevPoint, currentPoint, ctx }: Draw) {
@@ -149,8 +157,11 @@ function createNode(point: Point) {
   }
 
   function DrawNodes(){
+    if(appState.config.nodes === undefined){
+      return
+    }
     clear()
-    for (let i = 0; i < activeNodes.length; i++){
+    for (let i = 0; i < appState.config.nodes.length; i++){
       DrawNode(i)
     }
   }
@@ -160,17 +171,19 @@ function createNode(point: Point) {
     if (ctx === null) {
       return;
     }
-    var x = activeNodes[index].node.pos.x //.pos.x;
-    var y = activeNodes[index].node.pos.y;
-    var r = activeNodes[index].config.radius; //replace later
-    var color = ColorCollection[activeNodes[index].config.hue];
-  
+    var x = appState.config.nodes[index].node.pos.x //.pos.x;
+    var y = appState.config.nodes[index].node.pos.y;
+    var r = appState.config.nodes[index].config.radius; //replace later
+    var color = ColorCollection[appState.config.nodes[index].config.hue];
+
+    console.log(appState.config.nodes[index].config.label)
+
     // Translate!
     ctx.save();
     ctx.translate(x, y);
   
     // DRAW HIGHLIGHT???
-    if (editingIndex == activeNodes[index].node.id) {
+    if (appState.config.editingIndex == appState.config.nodes[index].node.id) {
       ctx.beginPath();
       ctx.arc(0, 0, r + 20, 0, MathCollection["tau"], false);
       ctx.fillStyle = ColorCollection[6];
@@ -187,70 +200,63 @@ function createNode(point: Point) {
     ctx.stroke();
   
     // RADIUS IS (ATAN) of VALUE?!?!?!
-    var _r = Math.atan(activeNodes[index].node.value * 5);
+    var _r = Math.atan(appState.config.nodes[index].node.value * 5);
     _r = _r / (Math.PI / 2);
     _r = (_r + 1) / 2;
   
     // INFINITE RANGE FOR RADIUS
     // linear from 0 to 1, asymptotic otherwise.
-    var _value;
-    if (activeNodes[index].node.value >= 0 && activeNodes[index].node.value <= 1) {
+    var _value = 4;
+    if (appState.config.nodes[index].node.value >= 0 && appState.config.nodes[index].node.value <= 1) {
       // (0,1) -> (0.1, 0.9)
-      _value = 0.1 + 0.8 * activeNodes[index].node.value;
+      _value = 0.1 + 0.8 * appState.config.nodes[index].node.value;
     } else {
-      if (activeNodes[index].node.value < 0) {
+      if (appState.config.nodes[index].node.value < 0) {
         // asymptotically approach 0, starting at 0.1
-        _value = (1 / (Math.abs(activeNodes[index].node.value) + 1)) * 0.1;
+        _value = (1 / (Math.abs(appState.config.nodes[index].node.value) + 1)) * 0.1;
       }
-      if (activeNodes[index].node.value > 1) {
+      if (appState.config.nodes[index].node.value > 1) {
         // asymptotically approach 1, starting at 0.9
-        _value = 1 - (1 / activeNodes[index].node.value) * 0.1;
+        _value = 1 - (1 / appState.config.nodes[index].node.value) * 0.1;
       }
     }
   
     // Colored bubble
-    ctx.beginPath();
+    // for(let i = 0; i <= 100; i++){
     var _circleRadiusGoto = r * _value!; // radius
-    activeNodes[index].geometry.circleRadius = activeNodes[index].geometry.circleRadius * 0.8 + _circleRadiusGoto * 0.2;
-    ctx.arc(0, 0, activeNodes[index].geometry.circleRadius, 0, MathCollection["tau"], false);
-    ctx.fillStyle = color;
-    ctx.fill();
-  
-    // Text!
-    var fontsize = 25;
-    ctx.font = "normal " + fontsize + "px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#000";
-    var width = ctx.measureText(activeNodes[index].node.label).width;
-    while (width > r * 2 - 30) {
-      // -30 for buffer. HACK: HARD-CODED.
-      fontsize -= 1;
-      ctx.font = "normal " + fontsize + "px sans-serif";
-      width = ctx.measureText(activeNodes[index].node.label).width;
+    var _circleRadius = 0
+    while(_circleRadius < (_circleRadiusGoto - 2)){
+      ctx.beginPath();
+      _circleRadius = _circleRadius * 0.8 + _circleRadiusGoto * 0.2;
+      ctx.arc(0, 0, _circleRadius, 0, MathCollection["tau"], false);
+      ctx.fillStyle = color;
+      ctx.fill();
+      console.log(_circleRadius)
     }
-    ctx.fillText(activeNodes[index].node.label, 0, 0);
+
+    // Text!
+    DrawText(ctx, appState.config.nodes[index].config.label, r)
   
     // WOBBLE CONTROLS
     var cl = 40;
     var cy = 0;
   
     // Controls!
-    ctx.globalAlpha = activeNodes[index].geometry.controlsAlpha;
+    ctx.globalAlpha = appState.config.nodes[index].geometry.controlsAlpha;
     ctx.strokeStyle = "rgba(0,0,0,0.8)";
     // top arrow
     ctx.beginPath();
     ctx.moveTo(-cl, -cy - cl);
     ctx.lineTo(0, -cy - cl * 2);
     ctx.lineTo(cl, -cy - cl);
-    ctx.lineWidth = activeNodes[index].geometry.controlsDirection > 0 ? 10 : 3;
+    ctx.lineWidth = appState.config.nodes[index].geometry.controlsDirection > 0 ? 10 : 3;
     ctx.stroke();
     // bottom arrow
     ctx.beginPath();
     ctx.moveTo(-cl, cy + cl);
     ctx.lineTo(0, cy + cl * 2);
     ctx.lineTo(cl, cy + cl);
-    ctx.lineWidth = activeNodes[index].geometry.controlsDirection < 0 ? 10 : 3;
+    ctx.lineWidth = appState.config.nodes[index].geometry.controlsDirection < 0 ? 10 : 3;
     ctx.stroke();
   
     // Restore
@@ -258,28 +264,38 @@ function createNode(point: Point) {
   }
 
   function getNodeByPoint(point: Position): number {
-    for(let i = 0; i < activeNodes.length; i++){
-      if(IsPointInNode(point, activeNodes[i].node.pos, 50)){
-        return activeNodes[i].node.id
+    if(appState.config.nodes === undefined){
+      return -1
+    }
+    for(let i = 0; i < appState.config.nodes.length; i++){
+      if(IsPointInNode(point, appState.config.nodes[i].node.pos, 50)){
+        return appState.config.nodes[i].node.id
       }
     }
     return -1
   }
 
+  function isPointInCanvas(point: Position): boolean {
+    if(point.y < 0){
+      return false
+    }
+    return true
+  }
+
   function updateNode() {
-    if(editingIndex === undefined || editingIndex === -1 || appState.config.node === undefined){
+    if(appState.config.editingIndex === undefined || appState.config.editingIndex === -1 || appState.config.node === undefined){
       return
     }
-    console.log('editingIndex for update: ', editingIndex)
-    let config = appState.config.node
+    // console.log('editingIndex for update: ', editingIndex)
+    let config = appState.config.node 
    // console.log("updated with: ", config)
-    activeNodes[editingIndex - 1].config = config;
+   appState.config.nodes[appState.config.editingIndex - 1].config = config;
     //DrawNodes()
   }
 
   function searchNodeIndexById(id: number) {
-    for(let i = 0; i < activeNodes.length; i++){
-      if(activeNodes[i].node.id == id){
+    for(let i = 0; i < appState.config.nodes.length; i++){
+      if(appState.config.nodes[i].node.id == id){
         return i
       }
     }

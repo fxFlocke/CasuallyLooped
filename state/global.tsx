@@ -1,4 +1,4 @@
-import { NodeConfiguration } from '@/datatypes/commondatatypes'
+import { NodeConfiguration, NodeElement } from '@/datatypes/commondatatypes'
 import React, { useReducer } from 'react'
 
 export const globalReducer = (state: any, action: any)=>{
@@ -6,41 +6,64 @@ export const globalReducer = (state: any, action: any)=>{
         case "LOAD_CONFIG":{
             return { ...state, config: action.config}
         }
+        case "CREATE_NODE": {
+            state.config.nodes.push(action.data)
+            return { ...state, config: {
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                node: action.data,
+                egde: state.config.edge,
+                nodes: state.config.nodes
+            }}
+        }
         case "CHANGE_NODE":{
             return { ...state, config: {
-                editMode: state.editMode,
-                node: action.node,
-                egde: state.edge,
-                geometries: state.geometries
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                node: action.data,
+                egde: state.config.edge,
+                nodes: state.config.nodes
             }}
         }
         case "CHANGE_EDGE":{
             return { ...state, config: {
-                editMode: state.editMode,
-                node: state.node,
-                egde: action.edge,
-                geometries: state.geometries
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                node: state.config.node,
+                egde: action.data,
+                nodes: state.config.nodes
             }}
         } 
         case "CHANGE_EDIT":{
             state.node = action.data;
             return { ...state, config: {
-                editMode: "ink",
-                node: state.node,
-                egde: state.edge,
-                geometries: state.geometries
+                editMode: action.data,
+                editingIndex: state.config.editingIndex,
+                node: state.config.node,
+                egde: state.config.edge,
+                nodes: state.config.nodes
             }}
         }
-        case "CHANGE_LABEL":{
+        case "CHANGE_LABEL":{ 
+            state.config.nodes[state.config.editingIndex - 1].config.label = action.data
             return { ...state, config: {
-                editMode: "ink",
-                node: action.data,
-                egde: state.edge,
-                geometries: state.geometries
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                node: state.config.node,
+                egde: state.config.edge,
+                nodes: state.config.nodes
             }}
         }
         case "CHANGE_COLOR":{
-            
+        }
+        case "CHANGE_EDITING_INDEX":{
+            return { ...state, config: {
+                editMode: state.config.editMode,
+                editingIndex: action.data,
+                node: state.config.node,
+                egde: state.config.edge,
+                nodes: state.config.nodes
+            }}
         }
         default:
             return state;
@@ -55,12 +78,15 @@ const initialNode: NodeConfiguration = {
     radius: 50,
 }
 
+const initialNodes: NodeElement[] = []
+
 const initialAppState: any = {
     config: {
         editMode: "ink",
+        editingIndex: -1,
         node: undefined,
         edge: undefined,
-        geometries: undefined
+        nodes: initialNodes
     }
 }
 

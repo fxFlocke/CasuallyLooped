@@ -16,6 +16,18 @@ export function IsPointInNode(pointPos: Position, nodePos: Position, r: number):
   return dist2 <= r2;
 }
 
-export function getCanvasStart() {
-  //When responsive, getScreenSize & switch for different paddings
+export function DrawText(ctx: CanvasRenderingContext2D, label: string, r: number) {
+  var fontsize = 25;
+  ctx.font = "normal " + fontsize + "px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#000";
+  var width = ctx.measureText(label).width;
+  while (width > r * 2 - 30) {
+    // -30 for buffer. HACK: HARD-CODED.
+    fontsize -= 1;
+    ctx.font = "normal " + fontsize + "px sans-serif";
+    width = ctx.measureText(label).width;
+  }
+  ctx.fillText(label, 0, 0);
 }
