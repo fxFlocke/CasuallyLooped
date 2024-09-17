@@ -35,7 +35,7 @@ export const globalReducer = (state: any, action: any)=>{
             }}
         } 
         case "CHANGE_EDIT":{
-            state.node = action.data;
+            state.config.node = action.data;
             return { ...state, config: {
                 editMode: action.data,
                 editingIndex: state.config.editingIndex,
@@ -45,7 +45,7 @@ export const globalReducer = (state: any, action: any)=>{
             }}
         }
         case "CHANGE_LABEL":{ 
-            state.config.nodes[state.config.editingIndex - 1].config.label = action.data
+            state.config.nodes = action.data
             return { ...state, config: {
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
