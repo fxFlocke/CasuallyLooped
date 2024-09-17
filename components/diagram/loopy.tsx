@@ -33,6 +33,17 @@ var defaultConfiguration: Configuration = {
 
 var activePoints: Point[] = [];
 
+function scaleCanvasForDevicePixelRatio(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+  const dpr = window.devicePixelRatio || 1;
+  const displayWidth = canvas.clientWidth;
+  const displayHeight = canvas.clientHeight;
+  if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
+    canvas.width = displayWidth * dpr;
+    canvas.height = displayHeight * dpr;
+    ctx.scale(dpr, dpr);
+  }
+}
+
 export function Loopy() {
 
   const [color, setColor] = useState<string>("#000");
@@ -40,6 +51,13 @@ export function Loopy() {
   const [appState, dispatch] = useContext(AppContext);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    // type guard
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    scaleCanvasForDevicePixelRatio(canvas, ctx);
     DrawNodes()
     if (activePoints.length < 2) {
       return;
@@ -167,13 +185,14 @@ function createNode(point: Point) {
   }
 
   function DrawNode(index: number) {
-    let ctx = canvasRef.current!.getContext("2d");
-    if (ctx === null) {
-      return;
+    let ctx = canvasRef.current?.getContext("2d");
+    if (ctx) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
     }
-    var x = appState.config.nodes[index].node.pos.x //.pos.x;
-    var y = appState.config.nodes[index].node.pos.y;
-    var r = appState.config.nodes[index].config.radius; //replace later
+    var x = Math.round(appState.config.nodes[index].node.pos.x) //.pos.x;
+    var y = Math.round(appState.config.nodes[index].node.pos.y);
+    var r = Math.round(appState.config.nodes[index].config.radius); //replace later
     var color = ColorCollection[appState.config.nodes[index].config.hue];
 
     console.log(appState.config.nodes[index].config.label)
