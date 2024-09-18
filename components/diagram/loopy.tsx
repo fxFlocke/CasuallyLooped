@@ -102,7 +102,9 @@ export function Loopy() {
       </div>
         <div className="pl-8 pr-8 2 pt-28 pb-8">
           <canvas
-            className={`w-[1200px] h-[800px] bg-[#28435a] rounded-2xl border-t border-b bg-opacity-90
+            className={`w-[1200px] h-[800px]
+               bg-[#28435a] 
+               rounded-2xl border-t border-b bg-opacity-90
                   ${
                     appState.config.editMode === "ink" && "cursor-[url('/resizedIcons/ink.png'),_pointer]" ||
                     appState.config.editMode === "text" && "cursor-[url('/resizedIcons/text.png'),_pointer]" ||
@@ -204,12 +206,15 @@ function createNode(point: Point) {
     ctx.save();
     ctx.translate(x, y);
   
-    // DRAW HIGHLIGHT???
+    // Synchronize & Visualize Editing
     if (appState.config.editingIndex == appState.config.nodes[index].node.id) {
+      //Draw Highlight
       ctx.beginPath();
       ctx.arc(0, 0, r + 20, 0, MathCollection["tau"], false);
       ctx.fillStyle = ColorCollection[6];
       ctx.fill();
+      //Take label
+      
     }
   
     // White-gray bubble with colored border
@@ -253,7 +258,6 @@ function createNode(point: Point) {
       ctx.arc(0, 0, _circleRadius, 0, MathCollection["tau"], false);
       ctx.fillStyle = color;
       ctx.fill();
-      console.log(_circleRadius)
     }
 
     // Text!
