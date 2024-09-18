@@ -186,6 +186,9 @@ function createNode(point: Point) {
 
   function DrawNode(index: number) {
     let ctx = canvasRef.current?.getContext("2d");
+    if (ctx === undefined || ctx == null){
+      return
+    }
     if (ctx) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
