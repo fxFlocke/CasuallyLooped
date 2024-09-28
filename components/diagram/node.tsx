@@ -22,8 +22,4 @@ export function NodeComponent({
         <a>{node.id}</a>
     </>
   );
-  
-  function startEditing(){
-    console.log('worked')
-  }
 }

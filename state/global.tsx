@@ -45,13 +45,13 @@ export const globalReducer = (state: any, action: any)=>{
             }}
         }
         case "CHANGE_LABEL":{ 
-            state.config.nodes = action.data
+            // state.config.nodes = action.data
             return { ...state, config: {
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
                 node: state.config.node,
                 egde: state.config.edge,
-                nodes: state.config.nodes
+                nodes: action.data
             }}
         }
         case "CHANGE_COLOR":{

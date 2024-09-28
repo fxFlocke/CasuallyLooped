@@ -10,8 +10,6 @@ export function Topbar() {
   const [appState, dispatch] = useContext(AppContext);
 
   useEffect(() => {
-    console.log(appState.config.editMode)
-    console.log(appState.config.node)
   }, [appState.config.editMode, appState.config.node])
 
   return (

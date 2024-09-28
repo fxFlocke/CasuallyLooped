@@ -13,36 +13,15 @@ import { Draw, Point, useDraw } from "@/hooks/usedraw";
 import { Node } from "@/datatypes/commondatatypes";
 import { NodeComponent } from "./node";
 import { AppContext } from "@/state/global";
-import { IsPointInNode, DrawText } from "@/functionality/geometry";
+import { IsPointInNode, DrawText , ScaleCanvasForDevicePixelRatio} from "@/functionality/geometry";
 import { RefObject } from "react";
 import { ColorCollection, MathCollection } from "@/datatypes/collections";
+import { CreateDefaultNodeConfiguration } from "@/functionality/creator";
 
 var globalID: number = 0;
-var defaultConfiguration: Configuration = {
-  editingMode : "ink",
-  node: {
-    id: 0,
-    startValue: 0,
-    label: "",
-    hue: 0,
-    radius: 50,
-  },
-  edge: undefined,
-  geometries: []
-};
-
 var activePoints: Point[] = [];
 
-function scaleCanvasForDevicePixelRatio(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
-  const dpr = window.devicePixelRatio || 1;
-  const displayWidth = canvas.clientWidth;
-  const displayHeight = canvas.clientHeight;
-  if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
-    canvas.width = displayWidth * dpr;
-    canvas.height = displayHeight * dpr;
-    ctx.scale(dpr, dpr);
-  }
-}
+
 
 export function Loopy() {
 
@@ -57,7 +36,7 @@ export function Loopy() {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    scaleCanvasForDevicePixelRatio(canvas, ctx);
+    ScaleCanvasForDevicePixelRatio(canvas, ctx);
     DrawNodes()
     if (activePoints.length < 2) {
       return;
@@ -80,13 +59,13 @@ export function Loopy() {
     let nodeID = getNodeByPoint(mouseClick)
     if (nodeID !== -1){
       dispatch({type: "CHANGE_EDITING_INDEX", data: nodeID})
-      dispatch({type: "CHANGE_NODE", data: appState.config.nodes[searchNodeIndexById(nodeID)].node})
+      // dispatch({type: "CHANGE_NODE", data: appState.config.nodes[searchNodeIndexById(nodeID)].node})
       return
     }
 
     if (isPointInCanvas(mouseClick)){
       dispatch({type: "CHANGE_EDITING_INDEX", data: -1})
-      dispatch({type: "CHANGE_NODE", data: defaultConfiguration.node})
+      // dispatch({type: "CHANGE_NODE", data: defaultConfiguration.node})
       return
     }
   }, [mouseClick])
@@ -137,7 +116,7 @@ function createNode(point: Point) {
     };
     let nodeElement: NodeElement = {
       node: node,
-      config: defaultConfiguration.node!,
+      config: CreateDefaultNodeConfiguration(),
       geometry: {
         circleRadius: 0,
         controlsAlpha: 0,
@@ -147,7 +126,7 @@ function createNode(point: Point) {
     };
     appState.config.nodes.push(nodeElement);
     dispatch({type: "CHANGE_EDITING_INDEX", data: node.id})
-    dispatch({type: "CHANGE_NODE", data: node})
+    // dispatch({type: "CHANGE_NODE", data: node})
   }
 
   function drawLine({ prevPoint, currentPoint, ctx }: Draw) {
@@ -200,7 +179,6 @@ function createNode(point: Point) {
     var r = Math.round(appState.config.nodes[index].config.radius); //replace later
     var color = ColorCollection[appState.config.nodes[index].config.hue];
 
-    console.log(appState.config.nodes[index].config.label)
 
     // Translate!
     ctx.save();

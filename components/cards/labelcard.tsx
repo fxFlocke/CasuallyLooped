@@ -13,8 +13,9 @@ export function LabelCard() {
   }
 
   function changeLabel(newLabel: string){
+    console.log("change label : ", newLabel, " of node: ", appState.config.editingIndex - 1)
     let nodes = appState.config.nodes
-    nodes[appState.config.editingIndex - 1].label = newLabel
+    nodes[appState.config.editingIndex - 1].config.label = newLabel
     dispatch({type:"CHANGE_LABEL", data: nodes})
   }
 

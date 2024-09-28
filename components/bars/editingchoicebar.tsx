@@ -7,7 +7,6 @@ export function EditingChoiceBar() {
   const [appState, dispatch] = useContext(AppContext);
 
   function setEditingMode(data: string){
-    console.log("dispatched ", data)
     dispatch({type:"CHANGE_EDIT", data: data});
   }
 
