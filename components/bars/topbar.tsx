@@ -17,14 +17,13 @@ export function Topbar() {
       <div className="grid grid-cols-2 items-center justify-start text-center w-full h-[120px] bg-[#28435a] rounded-2xl border-t border-b fixed">
         <EditingChoiceBar/>
         <div className="flex flex-shrink w-full gap-2 my-4">
-          {appState.config.editMode === "ink" && appState.config.node !== undefined && (
+          {appState.config.editMode === "node" && (
             <NodeBar/>
           )}
-          {appState.config.editMode === "ink" && appState.config.edge !== undefined && (
+          {appState.config.editMode === "edge"  && (
             <EdgeBar/>
           )}
-          {appState.config.editMode === "ink" && appState.config.node === undefined && <InformationBar/>}
-          {appState.config.editMode !== "ink" && <InformationBar/>}
+          {appState.config.editMode === "" && <InformationBar/>}
         </div>
       </div>
     </div>

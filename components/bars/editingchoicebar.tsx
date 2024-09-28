@@ -6,8 +6,12 @@ import { AppContext } from "@/state/global";
 export function EditingChoiceBar() {
   const [appState, dispatch] = useContext(AppContext);
 
-  function setEditingMode(data: string){
-    dispatch({type:"CHANGE_EDIT", data: data});
+  function setActionMode(data: string){
+    dispatch({type:"CHANGE_ACTION_MODE", data: data});
+  }
+
+  function setEditMode(data: string){
+    dispatch({type:"CHANGE_EDIT_MODE", data: data});
   }
 
   return (
@@ -15,21 +19,24 @@ export function EditingChoiceBar() {
       <div>
         <div className="flex flex-shrink md:pl-5 gap-x-2 md:gap-2">
           <div
-            onClick={() => setEditingMode("home")}
+            onClick={() => setEditMode("")}
             className="cursor-pointer">
-            <Logo />
+            <Logo/>
           </div>
           <div className="flex flex-shrink pl-12 gap-6">
-            <div onClick={() => setEditingMode("ink")}>
+            <div onClick={() => {
+              setActionMode("ink")
+              setEditMode("node")
+            }}>
               <EditingOption iconPath="/icons/ink.png" />
             </div>
-            <div onClick={() => setEditingMode("text")}>
+            <div onClick={() => setActionMode("text")}>
               <EditingOption iconPath="/icons/text.png" />
             </div>
-            <div onClick={() => setEditingMode("drag")}>
+            <div onClick={() => setActionMode("drag")}>
               <EditingOption iconPath="/icons/drag.png" />
             </div>
-            <div onClick={() => setEditingMode("erase")}>
+            <div onClick={() => setActionMode("erase")}>
               <EditingOption iconPath="/icons/erase.png" />
             </div>
           </div>

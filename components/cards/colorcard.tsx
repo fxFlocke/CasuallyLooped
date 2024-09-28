@@ -11,27 +11,18 @@ export function ColorCard() {
     let nodes = appState.config.nodes
     if(imgPoint < 25 ){
       nodes[appState.config.editingIndex - 1].config.hue = 0
-      dispatch({type:"CHANGE_COLOR", data: nodes})
-      return
-    }if(imgPoint < 50){
+    }else if(imgPoint < 50){
       nodes[appState.config.editingIndex - 1].config.hue = 1
-      dispatch({type:"CHANGE_COLOR", data: nodes})
-      return
-    }if(imgPoint < 75){
+    }else if(imgPoint < 75){
       nodes[appState.config.editingIndex - 1].config.hue = 2
-      dispatch({type:"CHANGE_COLOR", data: nodes})
-      return
-    }if(imgPoint < 100){
+    }else if(imgPoint < 100){
       nodes[appState.config.editingIndex - 1].config.hue = 3
-      dispatch({type:"CHANGE_COLOR", data: nodes})
-      return
-    }if(imgPoint < 125){
+    }else if(imgPoint < 125){
       nodes[appState.config.editingIndex - 1].config.hue = 4
-      dispatch({type:"CHANGE_COLOR", data: nodes})
-      return
+    }else{
+      nodes[appState.config.editingIndex - 1].config.hue = 5
     }
-    nodes[appState.config.editingIndex - 1].config.hue = 5
-    dispatch({type:"CHANGE_COLOR", data: nodes})
+    dispatch({type:"CHANGE_NODE", data: nodes})
   }
   
   return (

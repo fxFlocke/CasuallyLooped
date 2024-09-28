@@ -6,71 +6,54 @@ export const globalReducer = (state: any, action: any)=>{
         case "LOAD_CONFIG":{
             return { ...state, config: action.config}
         }
-        case "CREATE_NODE": {
-            state.config.nodes.push(action.data)
+        case "CHANGE_EDITING_INDEX":{
             return { ...state, config: {
+                actionMode: state.config.actionMode,
+                editMode: state.config.editMode,
+                editingIndex: action.data,
+                nodes: state.config.nodes
+            }}
+        }
+        case "CHANGE_ACTION_MODE":{
+            return { ...state, config: {
+                actionMode: action.data,
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
-                node: action.data,
-                egde: state.config.edge,
+                nodes: state.config.nodes
+            }}
+        }
+        case "CHANGE_EDIT_MODE":{
+            return { ...state, config: {
+                actionMode: state.config.actionMode,
+                editMode: action.data,
+                editingIndex: state.config.editingIndex,
+                nodes: state.config.nodes
+            }}
+        }
+        case "CREATE_NODE": {
+            return { ...state, config: {
+                actionMode: state.config.actionMode,
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
                 nodes: state.config.nodes
             }}
         }
         case "CHANGE_NODE":{
             return { ...state, config: {
+                actionMode: state.config.actionMode,
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
-                node: action.data,
-                egde: state.config.edge,
-                nodes: state.config.nodes
+                nodes: action.data
             }}
         }
         case "CHANGE_EDGE":{
             return { ...state, config: {
+                actionMode: state.config.actionMode,
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
-                node: state.config.node,
-                egde: action.data,
                 nodes: state.config.nodes
             }}
         } 
-        case "CHANGE_EDIT":{
-            state.config.node = action.data;
-            return { ...state, config: {
-                editMode: action.data,
-                editingIndex: state.config.editingIndex,
-                node: state.config.node,
-                egde: state.config.edge,
-                nodes: state.config.nodes
-            }}
-        }
-        case "CHANGE_LABEL":{ 
-            return { ...state, config: {
-                editMode: state.config.editMode,
-                editingIndex: state.config.editingIndex,
-                node: state.config.node,
-                egde: state.config.edge,
-                nodes: action.data
-            }}
-        }
-        case "CHANGE_COLOR":{
-            return { ...state, config: {
-                editMode: state.config.editMode,
-                editingIndex: state.config.editingIndex,
-                node: state.config.node,
-                egde: state.config.edge,
-                nodes: action.data
-            }}
-        }
-        case "CHANGE_EDITING_INDEX":{
-            return { ...state, config: {
-                editMode: state.config.editMode,
-                editingIndex: action.data,
-                node: state.config.node,
-                egde: state.config.edge,
-                nodes: state.config.nodes
-            }}
-        }
         default:
             return state;
     }
@@ -88,10 +71,9 @@ const initialNodes: NodeElement[] = []
 
 const initialAppState: any = {
     config: {
-        editMode: "ink",
+        actionMode: "ink",
+        editMode: "info",
         editingIndex: -1,
-        node: undefined,
-        edge: undefined,
         nodes: initialNodes
     }
 }

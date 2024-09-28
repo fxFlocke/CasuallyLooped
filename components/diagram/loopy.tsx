@@ -59,13 +59,11 @@ export function Loopy() {
     let nodeID = getNodeByPoint(mouseClick)
     if (nodeID !== -1){
       dispatch({type: "CHANGE_EDITING_INDEX", data: nodeID})
-      // dispatch({type: "CHANGE_NODE", data: appState.config.nodes[searchNodeIndexById(nodeID)].node})
       return
     }
 
     if (isPointInCanvas(mouseClick)){
       dispatch({type: "CHANGE_EDITING_INDEX", data: -1})
-      // dispatch({type: "CHANGE_NODE", data: defaultConfiguration.node})
       return
     }
   }, [mouseClick])
@@ -85,10 +83,10 @@ export function Loopy() {
                bg-[#28435a] 
                rounded-2xl border-t border-b bg-opacity-90
                   ${
-                    appState.config.editMode === "ink" && "cursor-[url('/resizedIcons/ink.png'),_pointer]" ||
-                    appState.config.editMode === "text" && "cursor-[url('/resizedIcons/text.png'),_pointer]" ||
-                    appState.config.editMode === "drag" && "cursor-[url('/resizedIcons/drag.png'),_pointer]" ||
-                    appState.config.editMode === "erase" && "cursor-[url('/resizedIcons/erase.png'),_pointer]"
+                    appState.config.actionMode === "ink" && "cursor-[url('/resizedIcons/ink.png'),_pointer]" ||
+                    appState.config.actionMode === "text" && "cursor-[url('/resizedIcons/text.png'),_pointer]" ||
+                    appState.config.actionMode === "drag" && "cursor-[url('/resizedIcons/drag.png'),_pointer]" ||
+                    appState.config.actionMode === "erase" && "cursor-[url('/resizedIcons/erase.png'),_pointer]"
                   }
               "`}
             ref={canvasRef}
@@ -205,24 +203,24 @@ function createNode(point: Point) {
     ctx.stroke();
   
     // RADIUS IS (ATAN) of VALUE?!?!?!
-    var _r = Math.atan(appState.config.nodes[index].node.value * 5);
+    var _r = Math.atan(appState.config.nodes[index].config.startValue * 5);
     _r = _r / (Math.PI / 2);
     _r = (_r + 1) / 2;
   
     // INFINITE RANGE FOR RADIUS
     // linear from 0 to 1, asymptotic otherwise.
     var _value = 4;
-    if (appState.config.nodes[index].node.value >= 0 && appState.config.nodes[index].node.value <= 1) {
+    if (appState.config.nodes[index].config.startValue >= 0 && appState.config.nodes[index].config.startValue <= 1) {
       // (0,1) -> (0.1, 0.9)
-      _value = 0.1 + 0.8 * appState.config.nodes[index].node.value;
+      _value = 0.1 + 0.8 * appState.config.nodes[index].config.startValue;
     } else {
       if (appState.config.nodes[index].node.value < 0) {
         // asymptotically approach 0, starting at 0.1
-        _value = (1 / (Math.abs(appState.config.nodes[index].node.value) + 1)) * 0.1;
+        _value = (1 / (Math.abs(appState.config.nodes[index].config.startValue) + 1)) * 0.1;
       }
-      if (appState.config.nodes[index].node.value > 1) {
+      if (appState.config.nodes[index].config.startValue > 1) {
         // asymptotically approach 1, starting at 0.9
-        _value = 1 - (1 / appState.config.nodes[index].node.value) * 0.1;
+        _value = 1 - (1 / appState.config.nodes[index].config.startValue) * 0.1;
       }
     }
   
