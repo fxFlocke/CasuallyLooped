@@ -13,10 +13,39 @@ export type NodeGeometry = {
 }
 export type EdgeConfiguration = {
   id: number;
-  allowance: number;
+  label: string,
+  strength: number;
   lowBound: number;
   highBound: number;
 };
+export type EdgeGeometry = {
+  arc: number,
+  from: number,
+  to: number,
+  rotation: number,
+  drawBase: EdgeDrawBase,
+  labelDrawBase: LabelDrawBase,
+  arrowDrawBase: ArrowDrawBase
+}
+export type EdgeDrawBase = {
+  f: Position,
+  ap: Position,
+  a: number,
+  aa: number,
+  w: number,
+  y2: number,
+  r: number
+}
+export type LabelDrawBase = {
+  lp: Position,
+  l: string,
+  labelXY: Position
+}
+export type ArrowDrawBase = {
+  startAngle: number,
+  end: number,
+  arrowLength: number
+}
 export type Configuration = {
   editingMode: string;
   node?: NodeConfiguration;
@@ -55,6 +84,7 @@ export type NodeElement = {
 export type EdgeElement = {
   edge: Edge;
   config: EdgeConfiguration;
+  geometry: EdgeGeometry;
 };
 export type LoopyConfiguration = {
   nodes: NodeConfiguration[];
@@ -68,6 +98,16 @@ export type CommonDataDiagram = {
   nodes: Node[];
   configs: ToolConfigurations;
 };
+
+//GeometryTypes
+export type Bound = {
+  top: number,
+  bottom: number,
+  left: number,
+  right: number,
+  width: number,
+  height: number,
+}
 
 //GraphTypes
 export type GraphNode = {

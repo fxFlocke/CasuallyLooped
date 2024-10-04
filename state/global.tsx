@@ -30,14 +30,6 @@ export const globalReducer = (state: any, action: any)=>{
                 nodes: state.config.nodes
             }}
         }
-        case "CREATE_NODE": {
-            return { ...state, config: {
-                actionMode: state.config.actionMode,
-                editMode: state.config.editMode,
-                editingIndex: state.config.editingIndex,
-                nodes: state.config.nodes
-            }}
-        }
         case "CHANGE_NODE":{
             return { ...state, config: {
                 actionMode: state.config.actionMode,
@@ -72,7 +64,7 @@ const initialNodes: NodeElement[] = []
 const initialAppState: any = {
     config: {
         actionMode: "ink",
-        editMode: "info",
+        editMode: "node",
         editingIndex: -1,
         nodes: initialNodes
     }

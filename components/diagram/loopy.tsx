@@ -1,31 +1,29 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { Topbar } from "@/components/bars/topbar";
 import {
-  Configuration,
-  NodeConfiguration,
+  Edge,
+  EdgeElement,
   NodeElement,
-  NodeGeometry,
-  Position,
 } from "@/datatypes/commondatatypes";
 import { StateRadiusChange } from "@/datatypes/stateTransitions";
 import { Draw, Point, useDraw } from "@/hooks/usedraw";
 import { Node } from "@/datatypes/commondatatypes";
 import { NodeComponent } from "./node";
 import { AppContext } from "@/state/global";
-import { IsPointInNode, DrawText , ScaleCanvasForDevicePixelRatio} from "@/functionality/geometry";
+import { IsPointInElement, DrawText , ScaleCanvasForDevicePixelRatio, GetPositionAlongArrow, EdgeCreationCalculation, CalculateEdgeRotationAndArc } from "@/functionality/geometry";
 import { RefObject } from "react";
 import { ColorCollection, MathCollection } from "@/datatypes/collections";
-import { CreateDefaultNodeConfiguration } from "@/functionality/creator";
+import { CreateDefaultNodeConfiguration, CreateDefaultEdgeConfiguration } from "@/functionality/creator";
+import { getElementByPoint, getNodeByPoint, getNodeIdByPoint, getNodeIndexByID, isPointInCanvas } from "@/functionality/searcher";
 
-var globalID: number = 0;
+var globalNodeID: number = 0;
+var globalEdgeID: number = 0;
 var activePoints: Point[] = [];
-
-
+const lineColor = "#000"
 
 export function Loopy() {
 
-  const [color, setColor] = useState<string>("#000");
   const { canvasRef, onMouseDown, mouseClick, clear } = useDraw(drawLine);
   const [appState, dispatch] = useContext(AppContext);
 
@@ -37,31 +35,51 @@ export function Loopy() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ScaleCanvasForDevicePixelRatio(canvas, ctx);
-    DrawNodes()
-    if (activePoints.length < 2) {
-      return;
-    }
-    var startPoint = activePoints[0];
-    var endPoint = activePoints[activePoints.length - 1];
-    var startNodeID = getNodeByPoint(startPoint);
-    var endNodeID = getNodeByPoint(endPoint);
-    if ((startNodeID !== -1) && (endNodeID !== -1)) {
-      // createEdge(activeNodes[startNodeID].node, activeNodes[endNodeID].node)
-      return;
-    } else if (startNodeID === -1) {
-      createNode(endPoint);
-    }
-    clear();
-    activePoints = [];
-  }, [onMouseDown]);
+    DrawGeometries()
 
-  useEffect(() => {
-    let nodeID = getNodeByPoint(mouseClick)
-    if (nodeID !== -1){
-      dispatch({type: "CHANGE_EDITING_INDEX", data: nodeID})
+    if (activePoints.length < 4) {
+      return;
+    }
+    if (appState.config.nodes === undefined){
+      clear()
+      activePoints = []
       return
     }
 
+    switch(appState.config.actionMode){
+      case "ink":
+        hamdleInkUpdate()
+        break
+      case "text":
+        handleTextUpdate()
+        break
+      case "drag":
+        handleDragUpdate()
+        break
+      case "erase":
+        handleEraseUpdate()
+        break
+    }
+
+    clear()
+    activePoints = []
+  }, [onMouseDown]);
+
+  useEffect(() => {
+    if(appState.config.nodes === undefined){
+      return
+    }
+    let [type, id] = getElementByPoint(mouseClick, appState.config.nodes)
+    if (id !== 0 && type === "node"){
+      dispatch({type: "CHANGE_EDIT_MODE", data: "node"})
+      dispatch({type: "CHANGE_EDITING_INDEX", data: id})
+      return
+    }
+    else if (id !== 0 && type === "edge"){
+      dispatch({type: "CHANGE_EDIT_MODE", data: "edge"})
+      dispatch({type: "CHANGE_EDITING_INDEX", data: id})
+      return
+    }
     if (isPointInCanvas(mouseClick)){
       dispatch({type: "CHANGE_EDITING_INDEX", data: -1})
       return
@@ -77,7 +95,7 @@ export function Loopy() {
       <div className="pb-6">
         <Topbar/>
       </div>
-        <div className="pl-8 pr-8 2 pt-28 pb-8">
+        <div className="ml-8 mr-8 mt-28 mb-8">
           <canvas
             className={`w-[1200px] h-[800px]
                bg-[#28435a] 
@@ -99,11 +117,9 @@ export function Loopy() {
     </>
   );
 
-function createEdge(startNode: Node, endNode: Node) {}
-
 function createNode(point: Point) {
     let node: Node = {
-      id: getUID(),
+      id: getNodeUID(),
       pos: {
         x: point.x,
         y: point.y,
@@ -124,36 +140,65 @@ function createNode(point: Point) {
     };
     appState.config.nodes.push(nodeElement);
     dispatch({type: "CHANGE_EDITING_INDEX", data: node.id})
-    // dispatch({type: "CHANGE_NODE", data: node})
+    console.log("created node with: ", node.id)
+  }
+
+  function createEdge(strokePoints: Point[], startNode: Node, endNode: Node) {
+    let [rotation, arc] = CalculateEdgeRotationAndArc(strokePoints, startNode, endNode)
+    let [drawBase, labelBase, arrowBase] = EdgeCreationCalculation(startNode, endNode, arc, rotation)
+    let edge: Edge = {
+      id: getEdgeUID(),
+      from: startNode.id,
+      to: endNode.id,
+      impact: 1,
+    }
+    let edgeElement: EdgeElement = {
+      edge: edge,
+      config: CreateDefaultEdgeConfiguration(),
+      geometry: {
+        arc: arc,
+        from: startNode.id,
+        to: endNode.id,
+        rotation: rotation,
+        drawBase: drawBase,
+        labelDrawBase: labelBase,
+        arrowDrawBase: arrowBase
+      }
+    }
+    let nodes = appState.config.nodes
+    let nodeIndex = getNodeIndexByID(startNode.id, appState.config.nodes)
+    nodes[nodeIndex].edges.push(edgeElement)
+    console.log("created edge to: ", edge.to)
+    dispatch({type: "CHANGE_NODE", data: nodes})
+    dispatch({type: "CHANGE_EDITING_INDEX", data: edge.id})
   }
 
   function drawLine({ prevPoint, currentPoint, ctx }: Draw) {
-    if (appState.config.editIndex !== -1) {
-      // setEditingIndex(-1);
-    }
     const { x: currX, y: currY } = currentPoint;
-    const lineColor = color;
-    const lineWidth = 5;
-
     let startPoint = prevPoint ?? currentPoint;
-    ctx.beginPath();
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = lineColor;
-    ctx.moveTo(startPoint.x, startPoint.y + 30);
-    ctx.lineTo(currX, currY + 30);
-    ctx.stroke();
+    if(appState.config.actionMode === "ink"){
+      const lineWidth = 5;
 
-    ctx.fillStyle = lineColor;
-    ctx.beginPath();
-    ctx.arc(startPoint.x, startPoint.y + 30, 2, 0, 2 * Math.PI);
-    ctx.fill();
+      ctx.beginPath();
+      ctx.lineWidth = lineWidth;
+      ctx.strokeStyle = lineColor;
+      ctx.moveTo(startPoint.x, startPoint.y + 30);
+      ctx.lineTo(currX, currY + 30);
+      ctx.stroke();
+  
+      ctx.fillStyle = lineColor;
+      ctx.beginPath();
+      ctx.arc(startPoint.x, startPoint.y + 30, 2, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
     activePoints.push({
       x: startPoint.x,
       y: startPoint.y + 30,
     });
   }
 
-  function DrawNodes(){
+  function DrawGeometries(){
     if(appState.config.nodes === undefined){
       return
     }
@@ -161,6 +206,21 @@ function createNode(point: Point) {
     for (let i = 0; i < appState.config.nodes.length; i++){
       DrawNode(i)
     }
+    for (let i = 0; i < appState.config.nodes.length; i++){
+      for (let j = 0; j < appState.config.nodes[i].edges.length; j++){
+        DrawEdge(i, j)
+      }
+    }
+  }
+
+  function getNodeUID() {
+    globalNodeID++;
+    return globalNodeID;
+  }
+
+  function getEdgeUID() {
+    globalEdgeID++;
+    return globalEdgeID;
   }
 
   function DrawNode(index: number) {
@@ -177,13 +237,12 @@ function createNode(point: Point) {
     var r = Math.round(appState.config.nodes[index].config.radius); //replace later
     var color = ColorCollection[appState.config.nodes[index].config.hue];
 
-
     // Translate!
     ctx.save();
     ctx.translate(x, y);
   
     // Synchronize & Visualize Editing
-    if (appState.config.editingIndex == appState.config.nodes[index].node.id) {
+    if (appState.config.editingIndex == appState.config.nodes[index].node.id && appState.config.editMode === "node") {
       //Draw Highlight
       ctx.beginPath();
       ctx.arc(0, 0, r + 20, 0, MathCollection["tau"], false);
@@ -265,47 +324,139 @@ function createNode(point: Point) {
     ctx.restore();
   }
 
-  function getNodeByPoint(point: Position): number {
-    if(appState.config.nodes === undefined){
-      return -1
-    }
-    for(let i = 0; i < appState.config.nodes.length; i++){
-      if(IsPointInNode(point, appState.config.nodes[i].node.pos, 50)){
-        return appState.config.nodes[i].node.id
-      }
-    }
-    return -1
-  }
-
-  function isPointInCanvas(point: Position): boolean {
-    if(point.y < 0){
-      return false
-    }
-    return true
-  }
-
-  function updateNode() {
-    if(appState.config.editingIndex === undefined || appState.config.editingIndex === -1 || appState.config.node === undefined){
+  function DrawEdge(nodeIndex: number, edgeIndex: number){
+    let ctx = canvasRef.current?.getContext("2d")
+    if (ctx === undefined || ctx == null){
       return
     }
-    // console.log('editingIndex for update: ', editingIndex)
-    let config = appState.config.node 
-   // console.log("updated with: ", config)
-   appState.config.nodes[appState.config.editingIndex - 1].config = config;
-    //DrawNodes()
+    if (ctx) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+    }
+
+    let startNode = appState.config.nodes[nodeIndex]
+    let edge = startNode.edges[edgeIndex]
+    if (edge.geometry.arc == 0) edge.geometry.arc = 0.1;
+
+    // Width & Color
+    ctx.lineWidth = 4 * Math.abs(edge.strength) - 2;
+    ctx.strokeStyle = "#555";
+
+    ctx.save();
+    ctx.translate(edge.geometry.drawBase.f.x, edge.geometry.drawBase.f.y);
+    ctx.rotate(edge.geometry.drawBase.f.a);
+    
+    // Highlight if in edit
+    // console.log("a: ", edge.geometry.drawBase.a)
+    // console.log("aa: ", edge.geometry.drawBase.aa)
+    // console.log("w: ", edge.geometry.drawBase.w)
+    // console.log("y2: ", edge.geometry.drawBase.y2)
+    // console.log("r: ", edge.geometry.drawBase.r)
+    if (edge.edge.id == appState.config.editingIndex && appState.config.editMode === "edge") {
+      ctx.save();
+      ctx.translate(edge.geometry.labelDrawBase.lp.x, edge.geometry.labelDrawBase.lp.y);
+      ctx.rotate(-edge.geometry.drawBase.f.a);
+      ctx.beginPath();
+      ctx.arc(0, 5, 60, 0, MathCollection.TAU, false);
+      ctx.fillStyle = ColorCollection[6];
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Arc it!
+    ctx.beginPath();
+    if (edge.geometry.arc > 0) {
+      ctx.arc(edge.geometry.drawBase.w / 2, edge.geometry.drawBase.y2, edge.geometry.drawBase.r, edge.geometry.arrowDrawBase.startAngle, edge.geometry.arrowDrawBase.end, false);
+    } else {
+      ctx.arc(edge.geometry.drawBase.w / 2, edge.geometry.drawBase.y2, edge.geometry.drawBase.r, -edge.geometry.arrowDrawBase.startAngle, edge.geometry.arrowDrawBase.end, true);
+    }
+    // Arrow HEAD!
+    ctx.save();
+    ctx.translate(edge.geometry.drawBase.ap.x, edge.geometry.drawBase.ap.y);
+    if (edge.geometry.arc < 0) ctx.scale(-1, -1);
+    ctx.rotate(edge.geometry.drawBase.aa);
+    ctx.moveTo(-edge.geometry.arrowDrawBase.arrowLength, -edge.geometry.arrowDrawBase.arrowLength);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(-edge.geometry.arrowDrawBase.arrowLength, edge.geometry.arrowDrawBase.arrowLength);
+    ctx.restore();
+
+    // Stroke!
+    ctx.stroke();
+
+    // Draw label
+    ctx.font = "100 60px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.save();
+    ctx.translate(edge.geometry.labelDrawBase.lp.x, edge.geometry.labelDrawBase.lp.y);
+    ctx.rotate(-edge.geometry.drawBase.f.a);
+    ctx.fillStyle = "#888";
+    ctx.fillText(edge.geometry.labelDrawBase.l, edge.geometry.labelDrawBase.labelXY.x, edge.geometry.labelDrawBase.labelXY.y);
+    // if (edge.config.lowBound != -1) {
+    //   var lowBoundImage = new Image();
+    //   lowBoundImage.src = "/icons/tresholds/" + edge.config.lowBound + ".png";
+    //   lowBoundImage.setAttribute("class", "lowBoundIcon");
+    //   ctx.drawImage(lowBoundImage, -80, 35);
+    // }
+    // if (edge.config.upBound != -1) {
+    //   var upBoundImage = new Image();
+    //   upBoundImage.src = "/icons/tresholds/" + edge.config.upBound + ".png";
+    //   upBoundImage.setAttribute("class", "upBoundIcon");
+    //   ctx.drawImage(upBoundImage, 10, 35);
+    // }
+    ctx.restore();
+    ctx.restore()
   }
 
-  function searchNodeIndexById(id: number) {
-    for(let i = 0; i < appState.config.nodes.length; i++){
-      if(appState.config.nodes[i].node.id == id){
-        return i
+  function hamdleInkUpdate(){
+    var startPoint = activePoints[0];
+    var endPoint = activePoints[activePoints.length - 1];
+    var startNodeID = getNodeByPoint(startPoint, appState.config.nodes);
+    var endNodeID = getNodeByPoint(endPoint, appState.config.nodes);
+
+    if ((startNodeID !== -1) && (endNodeID !== -1)) {
+      dispatch({type: "CHANGE_EDIT_MODE", data: "edge"})
+      createEdge(activePoints, appState.config.nodes[startNodeID].node, appState.config.nodes[endNodeID].node)
+    } else if (startNodeID === -1) {
+      dispatch({type: "CHANGE_EDIT_MODE", data: "node"})
+      createNode(endPoint);
+    }
+  }
+
+  function handleTextUpdate(){
+
+  }
+
+  function handleDragUpdate(){
+
+  }
+
+  function handleEraseUpdate(){
+    for(let i = 0; i < activePoints.length; i++){
+      let nodeIndex = getNodeByPoint(activePoints[i], appState.config.nodes)
+      if (nodeIndex !== -1){
+        var nodes = appState.config.nodes
+        let nodeID = nodes[nodeIndex].node.id
+        nodes.splice(nodeIndex, 1)
+        dispatch({type: "CHANGE_NODE", data: nodes})
+        RemoveEdgesToNode(nodes, nodeID)
+        return
       }
     }
-    return 0
   }
 
-  function getUID() {
-    globalID++;
-    return globalID;
+  function RemoveEdgesToNode(nodes: NodeElement[], nodeID: number){
+    console.log("looking for nodeID: ", nodeID)
+    for(let i = 0; i < nodes.length; i++){
+      console.log("node: ", nodes[i].node.id)
+      for(let j = 0; j < nodes[i].edges.length; j++){
+        console.log("has edge to: ", nodes[i].edges[j].edge.to)
+        if(nodes[i].edges[j].edge.to === nodeID){
+          nodes[i].edges.splice(j, 1)
+        }
+      }
+    }
+    dispatch({type: "CHANGE_NODE", data: nodes})
   }
+
 }
