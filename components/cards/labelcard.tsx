@@ -13,6 +13,8 @@ export function LabelCard() {
   }
 
   function changeLabel(newLabel: string){
+    if(appState.config.nodes === undefined) return
+    if(appState.config.editingIndex === -1) return
     let nodes = appState.config.nodes
     nodes[appState.config.editingIndex - 1].config.label = newLabel
     dispatch({type:"CHANGE_NODE", data: nodes})
@@ -20,7 +22,7 @@ export function LabelCard() {
 
   return (
     <>
-      <div className="grid grid-cols-1 w-[158px] h-[90px] overflow-hidden rounded-lg shadow-lg bg-[#2d4a64] normal-case">
+      <div className="grid grid-cols-1 w-[158px] h-[90px] overflow-hidden rounded-lg shadow-lg bg-[#2b2d2d] normal-case">
         <div className="justify-start pt-[10px] pl-[15px] h-28">
           <label
             form="name"
@@ -28,13 +30,13 @@ export function LabelCard() {
             Label
           </label>
           <input
+            className="bg-[#2b2d2d] border border-gray-100 text-sm rounded-lg focus:ring-gray-100 focus:border-gray-100 block w-[125px] p-2.5 text-gray-400"
             type="text"
             id="label"
             value={ evaluateInputValue() }
             onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
               changeLabel(e.target.value)
             }}
-            className="bg-gray-30 border border-gray-100 text-gray-900 text-sm rounded-lg focus:ring-blue-100 focus:border-blue-100 block w-[125px] p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-100 dark:focus:border-blue-100"
             required
           />
         </div>

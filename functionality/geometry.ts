@@ -16,30 +16,14 @@ export function IsPointInElement(pointPos: Position, elementPos: Position, r: nu
   return dist2 <= r2;
 }
 
-export function DrawText(ctx: CanvasRenderingContext2D, label: string, r: number) {
-  var fontsize = 25;
-  ctx.font = "normal " + fontsize + "px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#000";
-  var width = ctx.measureText(label).width;
-  while (width > r * 2 - 30) {
-    // -30 for buffer. HACK: HARD-CODED.
-    fontsize -= 1;
-    ctx.font = "normal " + fontsize + "px sans-serif";
-    width = ctx.measureText(label).width;
-  }
-  ctx.fillText(label, 0, 0);
-}
-
-export function ScaleCanvasForDevicePixelRatio(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+export function ScaleCanvasForDevicePixelRatio(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D | null) {
   const dpr = window.devicePixelRatio || 1;
   const displayWidth = canvas.clientWidth;
   const displayHeight = canvas.clientHeight;
   if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
     canvas.width = displayWidth * dpr;
     canvas.height = displayHeight * dpr;
-    ctx.scale(dpr, dpr);
+    ctx!.scale(dpr, dpr);
   }
 }
 

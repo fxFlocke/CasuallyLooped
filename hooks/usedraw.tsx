@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Position } from '@/datatypes/commondatatypes'
 
-export const useDraw = (
+export const useClickMove = (
   onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void
 ) => {
   const [mouseDown, setMouseDown] = useState(false);

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { EditingOption } from "../icons/editingoption";
+import { EditingOption, EditingOptionSmallerImage } from "../icons/editingoption";
 import { Logo } from "../icons/logo";
 import { AppContext } from "@/state/global";
 
@@ -28,16 +28,16 @@ export function EditingChoiceBar() {
               setActionMode("ink")
               setEditMode("node")
             }}>
-              <EditingOption iconPath="/icons/ink.png" />
+              <EditingOption iconPath="/icons/whitePencil.png" />
             </div>
             <div onClick={() => setActionMode("text")}>
-              <EditingOption iconPath="/icons/text.png" />
+              <EditingOption iconPath="/icons/whiteText.png" />
             </div>
             <div onClick={() => setActionMode("drag")}>
-              <EditingOption iconPath="/icons/drag.png" />
+              <EditingOptionSmallerImage iconPath="/icons/whiteHand.png" />
             </div>
             <div onClick={() => setActionMode("erase")}>
-              <EditingOption iconPath="/icons/erase.png" />
+              <EditingOption iconPath="/icons/whiteRubber.png" />
             </div>
           </div>
         </div>
