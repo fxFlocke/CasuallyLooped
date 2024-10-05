@@ -1,10 +1,43 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import { AppContext } from "@/state/global";
 
 export function ValueCard() {
   const [appState, dispatch] = useContext(AppContext);
   const [impactPosition, setImpactPosition] = useState("mt-1 ml-1")
+
+  function detectInitialValue(){
+    if(appState.config.editingIndex === -1) {
+      setImpactPosition("mt-1 ml-1")
+      return
+    }
+    let value = appState.config.nodes[appState.config.editingIndex - 1].config.startValue
+    switch(value){
+      case 0:
+        setImpactPosition("mt-1 ml-1")
+        break
+      case 0.16:
+        setImpactPosition("mt-1 ml-6.5")
+        break
+      case 0.33:
+        setImpactPosition("mt-1 ml-12")
+        break
+      case 0.55:
+        setImpactPosition("mt-1 ml-18")
+        break
+      case 0.67:
+        setImpactPosition("mt-1 ml-23")
+        break
+      case 0.83:
+        setImpactPosition("mt-1 ml-28")
+        break
+      case 1:
+        setImpactPosition("mt-1 ml-34")
+        break
+      default: 
+        setImpactPosition("mt-1 ml-1")
+    }
+  }
 
   function detectValue(click: React.MouseEvent<HTMLElement>){
     if(appState.config.editingIndex === -1){
@@ -37,6 +70,10 @@ export function ValueCard() {
     }
     dispatch({type:"CHANGE_NODE", data: nodes})
   }
+
+  useEffect(() => {
+    detectInitialValue()
+  }, [appState])
 
   return (
     <>

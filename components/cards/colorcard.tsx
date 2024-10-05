@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import { AppContext } from "@/state/global";
 
@@ -6,7 +6,37 @@ export function ColorCard() {
   const [appState, dispatch] = useContext(AppContext);
   const [colorPosition, setColorPosition] = useState("mt-1 ml-1")
 
-  function detectColor(click: React.MouseEvent<HTMLElement>){
+  function detectInitialColor(){
+    if(appState.config.editingIndex === -1) {
+      setColorPosition("mt-1 ml-1")
+      return
+    }
+    let color = appState.config.nodes[appState.config.editingIndex - 1].config.hue
+    switch(color){
+      case 0:
+        setColorPosition("mt-1 ml-1")
+        break
+      case 1:
+        setColorPosition("mt-1 ml-7.5")
+        break
+      case 2:
+        setColorPosition("mt-1 ml-14")
+        break
+      case 3:
+        setColorPosition("mt-1 ml-21")
+        break
+      case 4:
+        setColorPosition("mt-1 ml-26")
+        break
+      case 5:
+        setColorPosition("mt-1 ml-33")
+        break
+      default:
+        setColorPosition("mt-1 ml-1")
+    }
+  }
+
+  function detectClickedColor(click: React.MouseEvent<HTMLElement>){
     if(appState.config.editingIndex === -1){
       return
     }
@@ -34,6 +64,10 @@ export function ColorCard() {
     }
     dispatch({type:"CHANGE_NODE", data: nodes})
   }
+
+  useEffect(() => {
+    detectInitialColor()
+  }, [appState])
   
   return (
     <>
@@ -50,7 +84,7 @@ export function ColorCard() {
             width={150}
             height={150}
             className="rounded-xl mt-2 w-auto h-auto cursor-pointer"
-            onClick={(event) => detectColor(event)}
+            onClick={(event) => detectClickedColor(event)}
           />
           <Image
           src="/icons/upArrowWhite.png"
