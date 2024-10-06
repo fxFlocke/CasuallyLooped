@@ -17,6 +17,10 @@ import * as t from 'three'
 import { Canvas } from '@react-three/fiber'
 import Polyhedron from "../3Dobjects/Polyhedron";
 import Node3D from "../3Dobjects/Node";
+import { PointLight } from 'three';
+
+const light = new PointLight();
+light.position.set(1, 1, 0); // This position is relative to the camera's position
 
 var globalNodeID: number = 0;
 var globalEdgeID: number = 0;
@@ -31,8 +35,6 @@ export function Loopy() {
 
   const widthBase = (11.6 / 1200)
   const heightBase = (7.8 / 800)
-  const widthOffset = widthBase * (1200 / 2)
-  const heightOffset = heightBase * (800 / 2)
 
   useEffect(() => {
     let exit = decideMouseDownExit()
@@ -88,10 +90,13 @@ export function Loopy() {
         <div className="ml-8 mr-8 mt-28 mb-8 relative w-[1200px] h-[800px]">
           <div className="w-[1200px] h-[800px] z-10 bg-[#1c1d1d] rounded-2xl border-4 border-stone-300 bg-opacity-90 absolute">
             {appState.config.viewMode === "3D" &&   
-              <Canvas> 
+              <Canvas onCreated={({ camera, scene }) => {
+                camera.add(light);
+                scene.add(camera);
+              }}> 
                 {
               appState.config.nodes.map((nodeElement: NodeElement) => (
-                <Node3D key={nodeElement.node.id} name="meshNormalMaterial" position={[((widthBase * nodeElement.node.pos.x ) - 5.8), DecideYPosition(nodeElement.node.pos, ((heightBase * nodeElement.node.pos.y))), 0]} />
+                <Node3D key={nodeElement.node.id} nodeid={nodeElement.node.id} name="meshNormalMaterial" color={nodeElement.config.hue} size={nodeElement.config.startValue} position={[((widthBase * nodeElement.node.pos.x ) - 5.8), DecideYPosition(nodeElement.node.pos, ((heightBase * nodeElement.node.pos.y))), 0]} />
               ))}
               </Canvas>
             }
