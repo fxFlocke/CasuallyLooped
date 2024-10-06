@@ -14,6 +14,19 @@ export function EditingChoiceBar() {
     dispatch({type:"CHANGE_EDIT_MODE", data: data});
   }
 
+  function setViewMode(){
+    var data
+    switch(appState.config.viewMode){
+      case "2D":
+        data = "3D"
+        break
+      case "3D":
+        data = "2D"
+        break
+    }
+    dispatch({type:"CHANGE_VIEW_MODE", data: data})
+  }
+
   return (
     <>
       <div>
@@ -23,15 +36,21 @@ export function EditingChoiceBar() {
             className="cursor-pointer">
             <Logo/>
           </div>
-          <div className="flex flex-shrink pl-12 gap-6">
+          <div className="flex flex-shrink pl-4 gap-6">
+            <div onClick={() => setViewMode()}>
+              {
+                appState.config.viewMode === "2D" && <EditingOptionSmallerImage iconPath="/icons/2d.png"/> ||
+                appState.config.viewMode === "3D" && <EditingOptionSmallerImage iconPath="/icons/3d.png"/>
+              }
+            </div>
             <div onClick={() => {
               setActionMode("ink")
               setEditMode("node")
             }}>
-              <EditingOption iconPath="/icons/whitePencil.png" />
+              <EditingOptionSmallerImage iconPath="/icons/whitePencil.png" />
             </div>
             <div onClick={() => setActionMode("text")}>
-              <EditingOption iconPath="/icons/whiteText.png" />
+              <EditingOptionSmallerImage iconPath="/icons/whiteText.png" />
             </div>
             <div onClick={() => setActionMode("drag")}>
               <EditingOptionSmallerImage iconPath="/icons/whiteHand.png" />

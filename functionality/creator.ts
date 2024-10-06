@@ -4,10 +4,13 @@ import {
     NodeElement,
     Node,
     EdgeElement,
-    Edge
+    Edge,
+    ThreeBase,
+    CameraProps
 } from "@/datatypes/commondatatypes";
 import { Point } from "@/hooks/usedraw";
 import { CalculateEdgeRotationAndArc, EdgeCreationCalculation } from "./geometry";
+import * as t from 'three'
 
 export function CreateNodeElement(point: Point, uid: number){
     let node: Node = {
@@ -56,6 +59,45 @@ export function CreateEdgeElement(points: Point[], startNode: Node, endNode: Nod
       }
     }
     return edgeElement
+}
+
+export function CreateThreeBase(canvas: HTMLCanvasElement | null){
+  if(canvas === null) return defaultThreeBase()
+
+  let camProps = createCamProps(canvas)
+  let context = canvas.getContext("webgl")
+  console.log("no context")
+  if(!context) return defaultThreeBase()
+
+  console.log("created real three base")
+  let threeBase: ThreeBase = {
+    scene: new t.Scene(),
+    camera: new t.PerspectiveCamera( camProps.fov, camProps.aspect, camProps.near, camProps.far),
+    renderer: new t.WebGLRenderer( { context: context } )
+  }
+
+  return threeBase
+}
+
+function defaultThreeBase(){
+  let threeBase: ThreeBase = {
+    scene: new t.Scene(),
+    camera: new t.PerspectiveCamera( 75, 0, 0.1, 100),
+    renderer: new t.WebGLRenderer()
+  }
+  return threeBase
+}
+
+function createCamProps(canvas: HTMLCanvasElement){
+  console.log(canvas.width)
+  console.log(canvas.height)
+  let camProps: CameraProps = {
+    fov: 75,
+    aspect: (canvas.width / canvas.height),
+    near: 0.1,
+    far: 100
+  }
+  return camProps
 }
 
 function createDefaultNodeConfiguration(){

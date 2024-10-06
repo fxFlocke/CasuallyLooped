@@ -277,3 +277,23 @@ function rotatePoints(points: Point[], angle: number): Point[]{
   }
   return rotatedPoints
 }
+
+export function Decide3DxOffset(pos: Position){
+  if(pos.x <= 600 && pos.y <= 400){
+    return (-5.8)
+  }
+  if(pos.x > 600 && pos.y <= 400){
+    return 5.8
+  }
+  if(pos.x <= 600 && pos.y > 400){
+    return (-5.8)
+  }
+  return 5.8
+}
+
+export function DecideYPosition(pos: Position, yBase: number){
+  if(pos.y <= 400){
+    return (3.8 - yBase)
+  }
+  return (3.8 - (yBase))
+}

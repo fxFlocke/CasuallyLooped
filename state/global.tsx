@@ -8,14 +8,25 @@ export const globalReducer = (state: any, action: any)=>{
         }
         case "CHANGE_EDITING_INDEX":{
             return { ...state, config: {
+                viewMode: state.config.viewMode,
                 actionMode: state.config.actionMode,
                 editMode: state.config.editMode,
                 editingIndex: action.data,
                 nodes: state.config.nodes
             }}
         }
+        case "CHANGE_VIEW_MODE":{
+            return { ...state, config: {
+                viewMode: action.data,
+                actionMode: state.config.actionMode,
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                nodes: state.config.nodes
+            }}
+        } 
         case "CHANGE_ACTION_MODE":{
             return { ...state, config: {
+                viewMode: state.config.viewMode,
                 actionMode: action.data,
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
@@ -24,6 +35,7 @@ export const globalReducer = (state: any, action: any)=>{
         }
         case "CHANGE_EDIT_MODE":{
             return { ...state, config: {
+                viewMode: state.config.viewMode,
                 actionMode: state.config.actionMode,
                 editMode: action.data,
                 editingIndex: state.config.editingIndex,
@@ -32,6 +44,7 @@ export const globalReducer = (state: any, action: any)=>{
         }
         case "CHANGE_NODE":{
             return { ...state, config: {
+                viewMode: state.config.viewMode,
                 actionMode: state.config.actionMode,
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
@@ -40,6 +53,7 @@ export const globalReducer = (state: any, action: any)=>{
         }
         case "CHANGE_EDGE":{
             return { ...state, config: {
+                viewMode: state.config.viewMode,
                 actionMode: state.config.actionMode,
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
@@ -63,6 +77,7 @@ const initialNodes: NodeElement[] = []
 
 const initialAppState: any = {
     config: {
+        viewMode: "3D",
         actionMode: "ink",
         editMode: "node",
         editingIndex: -1,

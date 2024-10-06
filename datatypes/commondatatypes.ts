@@ -1,3 +1,5 @@
+import * as t from 'three'
+
 //UITypes
 export type NodeConfiguration = {
   id: number;
@@ -107,6 +109,19 @@ export type Bound = {
   right: number,
   width: number,
   height: number,
+}
+
+//3d-Types
+export type ThreeBase = {
+  scene: t.Scene,
+  camera: t.Camera,
+  renderer: t.WebGLRenderer
+}
+export type CameraProps = {
+  fov: number,
+  aspect: number,
+  near: number,
+  far: number
 }
 
 //GraphTypes

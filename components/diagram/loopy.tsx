@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { Topbar } from "@/components/bars/topbar";
 import {
   NodeElement
@@ -7,12 +7,16 @@ import {
 import { DrawNode } from "@/functionality/draw/drawNode";
 import { DrawEdge } from "@/functionality/draw/drawEdge";
 import { Draw, Point, useClickMove } from "@/hooks/usedraw";
-import { Node } from "@/datatypes/commondatatypes";
+import { Node, ThreeBase } from "@/datatypes/commondatatypes";
 import { AppContext } from "@/state/global";
-import { ScaleCanvasForDevicePixelRatio } from "@/functionality/geometry";
-import { CreateEdgeElement, CreateNodeElement } from "@/functionality/creator";
+import { Decide3DxOffset, DecideYPosition, ScaleCanvasForDevicePixelRatio } from "@/functionality/geometry";
+import { CreateEdgeElement, CreateNodeElement, CreateThreeBase } from "@/functionality/creator";
 import { getElementByPoint, getNodeByPoint, getNodeIndexByID, isPointInCanvas } from "@/functionality/searcher";
 import { DrawInk } from "@/functionality/draw/drawInk";
+import * as t from 'three'
+import { Canvas } from '@react-three/fiber'
+import Polyhedron from "../3Dobjects/Polyhedron";
+import Node3D from "../3Dobjects/Node";
 
 var globalNodeID: number = 0;
 var globalEdgeID: number = 0;
@@ -24,6 +28,11 @@ export function Loopy() {
   const { canvasRef, onMouseDown, mouseClick, clear } = useClickMove(handleClickMove);
   const [dragNode, setDragNode] = useState(-1)
   const [appState, dispatch] = useContext(AppContext);
+
+  const widthBase = (11.6 / 1200)
+  const heightBase = (7.8 / 800)
+  const widthOffset = widthBase * (1200 / 2)
+  const heightOffset = heightBase * (800 / 2)
 
   useEffect(() => {
     let exit = decideMouseDownExit()
@@ -58,19 +67,38 @@ export function Loopy() {
   }, [mouseClick])
 
   useEffect(() => {
-    DrawGeometries()
+    switch(appState.config.viewMode){
+      case "2D":
+        DrawGeometries()
+        break
+      case "3D":
+        clear()
+    }
+    if(appState.config.nodes !== undefined && appState.config.nodes.length > 0){
+      console.log(appState.config.nodes[appState.config.nodes.length - 1].node.pos.y)
+      console.log(DecideYPosition(appState.config.nodes[appState.config.nodes.length - 1].node.pos, ((heightBase * appState.config.nodes[appState.config.nodes.length - 1].node.pos.y))))
+    }
   }, [appState])
 
   return (
     <>
-      <div className="pb-6">
+      <div className="pb-6 z-20">
         <Topbar/>
       </div>
-        <div className="ml-8 mr-8 mt-28 mb-8">
+        <div className="ml-8 mr-8 mt-28 mb-8 relative w-[1200px] h-[800px]">
+          <div className="w-[1200px] h-[800px] z-10 bg-[#1c1d1d] rounded-2xl border-4 border-stone-300 bg-opacity-90 absolute">
+            {appState.config.viewMode === "3D" &&   
+              <Canvas> 
+                {
+              appState.config.nodes.map((nodeElement: NodeElement) => (
+                <Node3D key={nodeElement.node.id} name="meshNormalMaterial" position={[((widthBase * nodeElement.node.pos.x ) - 5.8), DecideYPosition(nodeElement.node.pos, ((heightBase * nodeElement.node.pos.y))), 0]} />
+              ))}
+              </Canvas>
+            }
+          </div>
+
           <canvas
-            className={`w-[1200px] h-[800px]
-               bg-[#1c1d1d] 
-               rounded-2xl border-4 border-stone-300 bg-opacity-90
+            className={`w-[1200px] h-[800px] z-10 bg-opacity-0 absolute
                   ${
                     appState.config.actionMode === "ink" && "cursor-[url('/icons/whitePencil.png'),_pointer]" ||
                     appState.config.actionMode === "text" && "cursor-[url('/icons/whiteText.png'),_pointer]" ||
@@ -82,8 +110,7 @@ export function Loopy() {
             ref={canvasRef}
             onMouseDown={onMouseDown}
             width={1200}
-            height={800}
-          >
+            height={800}>
           </canvas>
         </div>
     </>
@@ -108,13 +135,11 @@ export function Loopy() {
   }
 
   function DrawGeometries(){
-    if(appState.config.nodes === undefined){
-      return
-    }
     let ctx = canvasRef.current?.getContext("2d")
-    if (ctx === undefined || ctx == null){
+    if(appState.config.nodes === undefined || appState.config.viewMode === "3D" || ctx === undefined || ctx == null){
       return
     }
+
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     let editingIndex = appState.config.editingIndex
@@ -307,6 +332,7 @@ export function Loopy() {
     return false
   }
 }
+
 
 
 function getNodeUID() {

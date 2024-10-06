@@ -73,7 +73,7 @@ export function ValueCard() {
 
   useEffect(() => {
     detectInitialValue()
-  }, [appState])
+  })
 
   return (
     <>
