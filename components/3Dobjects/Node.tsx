@@ -11,6 +11,8 @@ export default function Node3D(props: any) {
   const ref = useRef<any>()
   const [appState, dispatch] = useContext(AppContext);
 
+  console.log(props.nodeid)
+
   function decideColor(color: number){
     return ColorCollection[color]
   }
@@ -20,8 +22,8 @@ export default function Node3D(props: any) {
   }
 
   useFrame((_, delta) => {
-    ref.current.rotation.x += 0.2 * delta
-    ref.current.rotation.y += 0.05 * delta
+    ref.current.rotation.x += 0.05 * delta
+    // ref.current.rotation.y += 0.05 * delta
   })
 
 //   useControls(props.name, {

@@ -14,7 +14,9 @@ export function Topbar() {
 
   return (
     <div className="flex flex-col">
-      <div className="grid grid-cols-2 items-center justify-start text-center w-full h-[120px] bg-[#1c1d1d]                rounded-2xl border-4 border-stone-300 bg-opacity-90 fixed">
+      <div className="grid grid-cols-2 items-center justify-start text-center w-full h-[120px]
+       bg-[#1c1d1d] 
+      rounded-2xl border-4 border-stone-300 bg-opacity-90 fixed">
         <EditingChoiceBar/>
         <div className="flex flex-shrink w-full gap-2">
           {appState.config.editMode === "node" && (

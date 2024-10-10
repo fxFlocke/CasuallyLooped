@@ -7,10 +7,10 @@ export default function NodeHighlight(props: any) {
   const ref = useRef<any>()
   const textureMap = useLoader(THREE.TextureLoader, "/icons/3D/fog2.png")
 
-  useFrame((_, delta) => {
-    ref.current.rotation.x += 0.9 * delta
-    ref.current.rotation.y += 0 * delta
-  })
+  // useFrame((_, delta) => {
+  //   ref.current.rotation.x += 0.9 * delta
+  //   ref.current.rotation.y += 0 * delta
+  // })
 
 //   useControls(props.name, {
 //     wireframe: {
@@ -38,7 +38,7 @@ export default function NodeHighlight(props: any) {
     <mesh {...props} ref={ref}>
       <sphereGeometry args={[ 0.6, 128, 128 ]} />
       <meshBasicMaterial 
-        alphaMap={textureMap} 
+        map={textureMap} 
         transparent={true}
         depthWrite={false}
         blending={THREE.AdditiveBlending}

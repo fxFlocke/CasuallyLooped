@@ -2,6 +2,7 @@
 import { useEffect, useState, useContext, useRef } from "react";
 import { Topbar } from "@/components/bars/topbar";
 import {
+  EdgeElement,
   NodeElement
 } from "@/datatypes/commondatatypes";
 import { DrawNode } from "@/functionality/draw/drawNode";
@@ -9,7 +10,7 @@ import { DrawEdge } from "@/functionality/draw/drawEdge";
 import { Draw, Point, useClickMove } from "@/hooks/usedraw";
 import { Node, ThreeBase } from "@/datatypes/commondatatypes";
 import { AppContext } from "@/state/global";
-import { Decide3DxOffset, DecideYPosition, ScaleCanvasForDevicePixelRatio } from "@/functionality/geometry";
+import { ScaleCanvasForDevicePixelRatio, TranslatePosition } from "@/functionality/geometry";
 import { CreateEdgeElement, CreateNodeElement, CreateThreeBase } from "@/functionality/creator";
 import { getElementByPoint, getNodeByPoint, getNodeIndexByID, isPointInCanvas } from "@/functionality/searcher";
 import { DrawInk } from "@/functionality/draw/drawInk";
@@ -18,6 +19,8 @@ import { Canvas } from '@react-three/fiber'
 import Polyhedron from "../3Dobjects/Polyhedron";
 import Node3D from "../3Dobjects/Node";
 import { PointLight } from 'three';
+import Edge3D from "../3Dobjects/Edge";
+import { nanoid } from 'nanoid'
 
 const light = new PointLight();
 light.position.set(1, 1, 0); // This position is relative to the camera's position
@@ -76,10 +79,6 @@ export function Loopy() {
       case "3D":
         clear()
     }
-    if(appState.config.nodes !== undefined && appState.config.nodes.length > 0){
-      console.log(appState.config.nodes[appState.config.nodes.length - 1].node.pos.y)
-      console.log(DecideYPosition(appState.config.nodes[appState.config.nodes.length - 1].node.pos, ((heightBase * appState.config.nodes[appState.config.nodes.length - 1].node.pos.y))))
-    }
   }, [appState])
 
   return (
@@ -95,9 +94,17 @@ export function Loopy() {
                 scene.add(camera);
               }}> 
                 {
-              appState.config.nodes.map((nodeElement: NodeElement) => (
-                <Node3D key={nodeElement.node.id} nodeid={nodeElement.node.id} name="meshNormalMaterial" color={nodeElement.config.hue} size={nodeElement.config.startValue} position={[((widthBase * nodeElement.node.pos.x ) - 5.8), DecideYPosition(nodeElement.node.pos, ((heightBase * nodeElement.node.pos.y))), 0]} />
-              ))}
+                appState.config.nodes.map((nodeElement: NodeElement, index: number) => (
+                <>
+                  <Node3D key={nanoid(4)} nodeid={index} name="meshNormalMaterial" color={nodeElement.config.hue} size={nodeElement.config.startValue} position={TranslatePosition(nodeElement.node.pos, widthBase, heightBase)} />
+                  {/* {
+                    nodeElement.edges.map((edgeElement: EdgeElement) => ,(
+                      <Edge3D key={"e" + edgeElement.edge.id.toString()} name="arrow" from={TranslatePosition(nodeElement.node.pos, widthBase, heightBase)} to={appState.config.nodes[getNodeIndexByID(edgeElement.edge.to, appState.config.nodes)].node.pos} position={TranslatePosition(nodeElement.node.pos, widthBase, heightBase)}/>
+                    ))
+                  } */}
+                </>
+              ))
+              }
               </Canvas>
             }
           </div>
@@ -228,6 +235,7 @@ export function Loopy() {
       dispatch({type: "CHANGE_EDIT_MODE", data: "edge"})
       createEdgeInState(activePoints, appState.config.nodes[startNodeID].node, appState.config.nodes[endNodeID].node)
     } else if (startNodeID === -1) {
+      console.log("enter")
       dispatch({type: "CHANGE_EDIT_MODE", data: "node"})
       createNodeInState(endPoint);
     }
