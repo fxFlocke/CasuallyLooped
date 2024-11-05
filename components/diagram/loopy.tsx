@@ -47,7 +47,6 @@ export function Loopy() {
   }, [onMouseDown]);
 
   useEffect(() => {
-    console.log(mouseClick)
     switch(appState.config.actionMode){
       case "ink":
         handleInkClick()
@@ -93,7 +92,6 @@ export function Loopy() {
   function createNodeInState(point: Point) {
     let nodeUID = getNodeUID()
     let nodeElement = CreateNodeElement(point, nodeUID)
-    console.log("created node with id: ", nodeUID)
     appState.config.nodes.push(nodeElement);
     dispatch({type: "CHANGE_EDITING_INDEX", data: nodeElement.node.id})
   }
@@ -181,7 +179,6 @@ export function Loopy() {
       return
     }
     if (isPointInCanvas(mouseClick)){
-      console.log("resetted from ink end")
       dispatch({type: "CHANGE_EDITING_INDEX", data: -1})
       return
     }

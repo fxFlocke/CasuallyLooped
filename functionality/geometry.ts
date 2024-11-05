@@ -214,21 +214,8 @@ export function CalculateEdgeRotationAndArc(strokeData: Point[], startNode: Node
     var dy = endPos.y - startPos.y;
     var angle = Math.atan2(dy, dx);
     var translated = translatePoints(strokeData, (-startPos.x), (-startPos.y));
-    // let testPoints = [[-27.49,29.5],[-27.496282233817965,29.5],[-27.496282233817965,31.5],[-31.496282233817965,38.5],[-34.496282233817965,45.5],[-37.496282233817965,53.5],[-42.496282233817965,70.5],[-43.496282233817965,81.5],[-45.496282233817965,84.5],[-47.496282233817965,100.5],[-48.496282233817965,103.5],[-49.496282233817965,105.5],[-49.496282233817965,107.5],[-47.496282233817965,111.5],[-47.496282233817965,113.5],[-45.496282233817965,116.5],[-31.496282233817965,140.5],[-27.496282233817965,145.5],[-27.496282233817965,145.5],[-25.496282233817965,147.5],[-24.496282233817965,148.5],[-24.496282233817965,149.5],[-23.496282233817965,149.5],[-22.496282233817965,150.5]]
-    // let mappedTestPoints = testPoints.map((x)=>({x:x[0],y:x[1]}))
-    // console.log(testPoints)
-    // console.log(mappedTestPoints)
-    // let testAngle = 1.558218373782614
-    // var rotated = rotatePoints(mappedTestPoints, -testAngle);
-    // var _rotated = _rotatePoints(testPoints, -testAngle)
-    // console.log("startPoint after rotation intern: ", rotated[0])
-    // console.log("startPoint after rotation extern: ", _rotated[0])
-    console.log(translated)
     let rotated = rotatePoints(translated, -angle)
     let bounds = getBound(rotated);
-    console.log(bounds)
-
-    // console.log(bounds)
 
     rotation = 0
 
@@ -236,7 +223,6 @@ export function CalculateEdgeRotationAndArc(strokeData: Point[], startNode: Node
       arc = -bounds.top;
     else arc = -bounds.bottom;
 
-    console.log("arc: ", arc)
   }
 
   return [rotation, arc]
@@ -287,43 +273,10 @@ function translatePoints(points: Point[], dx: number, dy: number): Point[]{
 function rotatePoints(points: Point[], angle: number): Point[]{
   var rotatedPoints = points
   for (var i = 0; i < rotatedPoints.length; i++) {
-    rotatedPoints[i].x = parseFloat(rotatedPoints[i].x.toFixed(5))
-    rotatedPoints[i].y = parseFloat(rotatedPoints[i].y.toFixed(5))
-    rotatedPoints[i].x = rotatedPoints[i].x * Math.cos(angle) - rotatedPoints[i].y * Math.sin(angle);
-    rotatedPoints[i].y = rotatedPoints[i].y * Math.cos(angle) + rotatedPoints[i].x * Math.sin(angle);
+    let x = rotatedPoints[i].x
+    let y = rotatedPoints[i].y
+    rotatedPoints[i].x = x * Math.cos(angle) - y * Math.sin(angle);
+    rotatedPoints[i].y = y * Math.cos(angle) + x * Math.sin(angle);
   }
   return rotatedPoints
-}
-
-function trimNumber(val: number) {
-  var stringified = val.toString(); //convert number to string
-  var result = stringified.substring(4,stringified.length)  // cut six first character
-  return parseInt(result); // convert it to a number
-}
-
-function _rotatePoints(points: any, angle: any) {
-  points = JSON.parse(JSON.stringify(points));
-  console.log(JSON.stringify(points))
-  for (var i = 0; i < points.length; i++) {
-    var p = points[i];
-    var x = p[0];
-    var y = p[1];
-    p[0] = x * Math.cos(angle) - y * Math.sin(angle);
-    p[1] = y * Math.cos(angle) + x * Math.sin(angle);
-  }
-  return points;
-}
-
-function decidePointVal(nodeVal: number, pointVal: number){
-  if (pointVal < nodeVal)
-    return pointVal
-  else return -pointVal
-}
-
-function AdjustPointsToNodePos(points: Position[], nodePods: Position): Position[] {
-  for(let i = 0; i < points.length; i++){
-    points[i].x = points[i].x - nodePods.x
-    points[i].y = points[i].y - nodePods.y
-  }
-  return points
 }
