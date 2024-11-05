@@ -1,5 +1,5 @@
 import { ColorCollection, MathCollection } from "@/datatypes/collections";
-import { EdgeElement, NodeElement } from "@/datatypes/commondatatypes";
+import { EdgeElement, NodeElement, Position } from "@/datatypes/commondatatypes";
 
 export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editingIndex: number, editMode: string){
     if (edge.geometry.arc == 0) edge.geometry.arc = 0.1;
@@ -9,7 +9,7 @@ export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editi
     ctx.strokeStyle = "#555";
 
     ctx.save();
-    ctx.translate(edge.geometry.drawBase.f.x, edge.geometry.drawBase.f.y);
+    ctx.translate((edge.geometry.drawBase.f.x / 2), (edge.geometry.drawBase.f.y / 2));
     ctx.rotate(edge.geometry.drawBase.a);
 
     if (edge.edge.id == editingIndex && editMode === "edge") {
@@ -26,13 +26,13 @@ export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editi
     // Arc it!
     ctx.beginPath();
     if (edge.geometry.arc > 0) {
-      ctx.arc(edge.geometry.drawBase.w / 2, edge.geometry.drawBase.y2, edge.geometry.drawBase.r, edge.geometry.arrowDrawBase.startAngle, edge.geometry.arrowDrawBase.end, false);
+      ctx.arc(((edge.geometry.drawBase.w / 2) / 2), (edge.geometry.drawBase.y2 / 2), (edge.geometry.drawBase.r / 2), edge.geometry.arrowDrawBase.startAngle, edge.geometry.arrowDrawBase.end, false);
     } else {
-      ctx.arc(edge.geometry.drawBase.w / 2, edge.geometry.drawBase.y2, edge.geometry.drawBase.r, -edge.geometry.arrowDrawBase.startAngle, edge.geometry.arrowDrawBase.end, true);
+      ctx.arc(((edge.geometry.drawBase.w / 2) / 2), (edge.geometry.drawBase.y2 / 2), (edge.geometry.drawBase.r / 2), -edge.geometry.arrowDrawBase.startAngle, edge.geometry.arrowDrawBase.end, true);
     }
     // Arrow HEAD!
     ctx.save();
-    ctx.translate(edge.geometry.drawBase.ap.x, edge.geometry.drawBase.ap.y);
+    ctx.translate((edge.geometry.drawBase.ap.x / 2), (edge.geometry.drawBase.ap.y / 2));
     if (edge.geometry.arc < 0) ctx.scale(-1, -1);
     ctx.rotate(edge.geometry.drawBase.aa);
     ctx.moveTo(-edge.geometry.arrowDrawBase.arrowLength, -edge.geometry.arrowDrawBase.arrowLength);

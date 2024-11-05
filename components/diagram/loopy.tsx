@@ -27,7 +27,7 @@ export function Loopy() {
 
   useEffect(() => {
     let exit = decideMouseDownExit()
-    if(exit){
+    if(exit){ 
       return
     }
 
@@ -47,6 +47,7 @@ export function Loopy() {
   }, [onMouseDown]);
 
   useEffect(() => {
+    console.log(mouseClick)
     switch(appState.config.actionMode){
       case "ink":
         handleInkClick()
@@ -92,8 +93,8 @@ export function Loopy() {
   function createNodeInState(point: Point) {
     let nodeUID = getNodeUID()
     let nodeElement = CreateNodeElement(point, nodeUID)
+    console.log("created node with id: ", nodeUID)
     appState.config.nodes.push(nodeElement);
-    console.log("created node: ", nodeElement.node.id)
     dispatch({type: "CHANGE_EDITING_INDEX", data: nodeElement.node.id})
   }
 
@@ -121,12 +122,12 @@ export function Loopy() {
     let editMode = appState.config.editMode
     clear()
     for (let i = 0; i < appState.config.nodes.length; i++){
-      DrawNode(ctx, appState.config.nodes[i], editingIndex, editMode)
-    }
-    for (let i = 0; i < appState.config.nodes.length; i++){
       for (let j = 0; j < appState.config.nodes[i].edges.length; j++){
         DrawEdge(ctx, appState.config.nodes[i].edges[j], editingIndex, editMode)
       }
+    }
+    for (let i = 0; i < appState.config.nodes.length; i++){
+      DrawNode(ctx, appState.config.nodes[i], editingIndex, editMode)
     }
   }
 
@@ -151,7 +152,6 @@ export function Loopy() {
     //Node Clicked
     let nodeIndex = getNodeByPoint({x: mouseClick.x, y: mouseClick.y}, appState.config.nodes)
     if(nodeIndex !== -1){
-      console.log("got Node")
       dispatch({type: "CHANGE_EDIT_MODE", data: "node"})
       dispatch({type: "CHANGE_EDITING_INDEX", data: appState.config.nodes[nodeIndex].node.id})
       return

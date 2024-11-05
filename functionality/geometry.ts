@@ -61,28 +61,28 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
       var fx = (startNode.pos.x) * 2;
       var fy = (startNode.pos.y) * 2;
       var tx = (endNode.pos.x) * 2;
-      var ty = (endNode.pos.y) * 2;
+      var ty = (endNode.pos.y + 8) * 2;
       if (startNode.id == endNode.id) {
         rotation *= MathCollection.tau / 360;
         tx += Math.cos(rotation);
         ty += Math.sin(rotation);
       }
-      var dx = tx - fx;
-      var dy = ty - fy;
+      var dx = (tx - fx);
+      var dy = (ty - fy);
       var w = Math.sqrt(dx * dx + dy * dy);
       var a = Math.atan2(dy, dx);
       var h = Math.abs(arc * 2);
   
       // From: http://www.mathopenref.com/arcradius.html
-      var r = h / 2 + (w * w) / (8 * h);
+      var r = (h / 2) + ((w * w) / (8 * h))
       var y = r - h; // the circle's y-pos is radius - given height.
-      var a2 = Math.acos(w / 2 / r); // angle from x axis, arc-cosine of half-width & radius
+      var a2 = Math.acos((w / 2) / r); // angle from x axis, arc-cosine of half-width & radius
   
       // Arrow buffer...
       var arrowBuffer = 15;
       var arrowDistance = (radius + arrowBuffer) * 2;
       var arrowAngle = arrowDistance / r; // (distance/circumference)*TAU, close enough.
-      var beginDistance = (radius + arrowBuffer)// * 2;
+      var beginDistance = (radius + arrowBuffer) * 2;
       var beginAngle = beginDistance / r;
   
       // Arc it!
@@ -92,7 +92,6 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
       var begin
       var end
       if (h > r) {
-        // console.log(" h smaller r")
         startAngle *= -1;
         endAngle *= -1;
       }
@@ -105,7 +104,7 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
         begin = -startAngle - beginAngle;
         end = -endAngle + arrowAngle;
       }
-  
+
       // Arrow HEAD!
       var arrowLength = 10 * 2;
       var ax = w / 2 + Math.cos(end) * r;
@@ -135,8 +134,8 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
       var ly = labelPosition.y;
   
       // ACTUAL label position, for grabbing purposes
-      var labelX = (fx + Math.cos(a) * lx - Math.sin(a) * ly) / 10000; // un-retina
-      var labelY = (fy + Math.sin(a) * lx + Math.cos(a) * ly) / 10000; // un-retina
+      var labelX = (fx + Math.cos(a) * lx - Math.sin(a) * ly) / 2; // un-retina
+      var labelY = (fy + Math.sin(a) * lx + Math.cos(a) * ly) / 2; // un-retina
   
       // ...add offset to label
       var labelBuffer = 18 * 2; // retina
@@ -214,18 +213,31 @@ export function CalculateEdgeRotationAndArc(strokeData: Point[], startNode: Node
     var dx = endPos.x - startPos.x;
     var dy = endPos.y - startPos.y;
     var angle = Math.atan2(dy, dx);
-    var translated = translatePoints(strokeData, -startPos.x, -startPos.y);
-    var rotated = rotatePoints(translated, -angle);
+    var translated = translatePoints(strokeData, (-startPos.x), (-startPos.y));
+    // let testPoints = [[-27.49,29.5],[-27.496282233817965,29.5],[-27.496282233817965,31.5],[-31.496282233817965,38.5],[-34.496282233817965,45.5],[-37.496282233817965,53.5],[-42.496282233817965,70.5],[-43.496282233817965,81.5],[-45.496282233817965,84.5],[-47.496282233817965,100.5],[-48.496282233817965,103.5],[-49.496282233817965,105.5],[-49.496282233817965,107.5],[-47.496282233817965,111.5],[-47.496282233817965,113.5],[-45.496282233817965,116.5],[-31.496282233817965,140.5],[-27.496282233817965,145.5],[-27.496282233817965,145.5],[-25.496282233817965,147.5],[-24.496282233817965,148.5],[-24.496282233817965,149.5],[-23.496282233817965,149.5],[-22.496282233817965,150.5]]
+    // let mappedTestPoints = testPoints.map((x)=>({x:x[0],y:x[1]}))
+    // console.log(testPoints)
+    // console.log(mappedTestPoints)
+    // let testAngle = 1.558218373782614
+    // var rotated = rotatePoints(mappedTestPoints, -testAngle);
+    // var _rotated = _rotatePoints(testPoints, -testAngle)
+    // console.log("startPoint after rotation intern: ", rotated[0])
+    // console.log("startPoint after rotation extern: ", _rotated[0])
+    console.log(translated)
+    let rotated = rotatePoints(translated, -angle)
     let bounds = getBound(rotated);
+    console.log(bounds)
 
-    rotation = 0//(360 / MathCollection.tau) + 90
+    // console.log(bounds)
 
-    // Arc!
+    rotation = 0
+
     if (Math.abs(bounds.top) > Math.abs(bounds.bottom))
       arc = -bounds.top;
     else arc = -bounds.bottom;
-  }
 
+    console.log("arc: ", arc)
+  }
 
   return [rotation, arc]
 }
@@ -237,7 +249,10 @@ function getBound(points: Point[]): Bound{
   bottom = -Infinity
 
   for (var i = 0; i < points.length; i++) {
-    var point = points[i];
+    var point: Position = {
+      x: points[i].x,
+      y: points[i].y
+    };
     if (point.x < left) left = point.x;
     if (right < point.x) right = point.x;
     if (point.y < top) top = point.y;
@@ -272,8 +287,43 @@ function translatePoints(points: Point[], dx: number, dy: number): Point[]{
 function rotatePoints(points: Point[], angle: number): Point[]{
   var rotatedPoints = points
   for (var i = 0; i < rotatedPoints.length; i++) {
+    rotatedPoints[i].x = parseFloat(rotatedPoints[i].x.toFixed(5))
+    rotatedPoints[i].y = parseFloat(rotatedPoints[i].y.toFixed(5))
     rotatedPoints[i].x = rotatedPoints[i].x * Math.cos(angle) - rotatedPoints[i].y * Math.sin(angle);
     rotatedPoints[i].y = rotatedPoints[i].y * Math.cos(angle) + rotatedPoints[i].x * Math.sin(angle);
   }
   return rotatedPoints
+}
+
+function trimNumber(val: number) {
+  var stringified = val.toString(); //convert number to string
+  var result = stringified.substring(4,stringified.length)  // cut six first character
+  return parseInt(result); // convert it to a number
+}
+
+function _rotatePoints(points: any, angle: any) {
+  points = JSON.parse(JSON.stringify(points));
+  console.log(JSON.stringify(points))
+  for (var i = 0; i < points.length; i++) {
+    var p = points[i];
+    var x = p[0];
+    var y = p[1];
+    p[0] = x * Math.cos(angle) - y * Math.sin(angle);
+    p[1] = y * Math.cos(angle) + x * Math.sin(angle);
+  }
+  return points;
+}
+
+function decidePointVal(nodeVal: number, pointVal: number){
+  if (pointVal < nodeVal)
+    return pointVal
+  else return -pointVal
+}
+
+function AdjustPointsToNodePos(points: Position[], nodePods: Position): Position[] {
+  for(let i = 0; i < points.length; i++){
+    points[i].x = points[i].x - nodePods.x
+    points[i].y = points[i].y - nodePods.y
+  }
+  return points
 }
