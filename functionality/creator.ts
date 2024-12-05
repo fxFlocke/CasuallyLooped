@@ -29,6 +29,7 @@ export function CreateNodeElement(point: Point, uid: number){
           controlsDirection: 0
         },
         edges: [],
+        edgeReferences: [],
     };
     return nodeElement
 }
@@ -41,6 +42,7 @@ export function CreateEdgeElement(points: Point[], startNode: Node, endNode: Nod
       from: startNode.id,
       to: endNode.id,
       impact: 1,
+      allowance: 0
     }
     let edgeElement: EdgeElement = {
       edge: edge,
@@ -73,7 +75,6 @@ function createDefaultEdgeConfiguration(){
           id: 0,
           label: "",
           strength: 1,
-          lowBound: 0,
-          highBound: 1,
+          allowance: 0,
       } as EdgeConfiguration;
 }

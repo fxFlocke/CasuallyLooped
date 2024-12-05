@@ -12,12 +12,12 @@ export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editi
     ctx.translate((edge.geometry.drawBase.f.x / 2), (edge.geometry.drawBase.f.y / 2));
     ctx.rotate(edge.geometry.drawBase.a);
 
-    if (edge.edge.id == editingIndex && editMode === "edge") {
+    if (edge.edge.id === editingIndex && editMode === "edge") {
       ctx.save();
-      ctx.translate(edge.geometry.labelDrawBase.lp.x, edge.geometry.labelDrawBase.lp.y);
+      ctx.translate((edge.geometry.labelDrawBase.lp.x / 2), (edge.geometry.labelDrawBase.lp.y / 2));
       ctx.rotate(-edge.geometry.drawBase.a);
       ctx.beginPath();
-      ctx.arc(0, 5, 60, 0, MathCollection.TAU, false);
+      ctx.arc(0, 5, 30, 0, MathCollection["tau"], false);
       ctx.fillStyle = ColorCollection[6];
       ctx.fill();
       ctx.restore();
@@ -44,14 +44,14 @@ export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editi
     ctx.stroke();
 
     // Draw label
-    ctx.font = "100 60px sans-serif";
+    ctx.font = "100 40px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.save();
-    ctx.translate(edge.geometry.labelDrawBase.lp.x, edge.geometry.labelDrawBase.lp.y);
+    ctx.translate((edge.geometry.labelDrawBase.lp.x / 2), (edge.geometry.labelDrawBase.lp.y / 2));
     ctx.rotate(-edge.geometry.drawBase.a);
     ctx.fillStyle = "#888";
-    ctx.fillText(edge.geometry.labelDrawBase.l, edge.geometry.labelDrawBase.labelXY.x, edge.geometry.labelDrawBase.labelXY.y);
+    ctx.fillText(edge.geometry.labelDrawBase.l, 0, 0);
 
     ctx.restore();
     ctx.restore()

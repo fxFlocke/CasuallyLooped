@@ -68,11 +68,12 @@ export function ValueCard() {
       nodes[appState.config.editingIndex - 1].config.startValue = 1
       setImpactPosition("mt-1 ml-34")
     }
-    dispatch({type:"CHANGE_NODE", data: nodes})
+    dispatch({type:"EDIT", data: nodes})
   }
 
   useEffect(() => {
     detectInitialValue()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState])
 
   return (

@@ -7,6 +7,7 @@ export const useClickMove = (
 ) => {
   const [mouseDown, setMouseDown] = useState(false);
   const [mouseClick, setMouseClick] = useState<Position>({ x: 0, y: 0});
+  const [windowClick, setWindowClick] = useState<Position>({ x: 0, y: 0})
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prevPoint = useRef<null | Point>(null);
@@ -54,6 +55,10 @@ export const useClickMove = (
     const mouseClickHandler = (e: MouseEvent) => {
       if (mouseDown === false) {
         const currentPoint = computePointInCanvas(e);
+        setWindowClick({
+          x: e.clientX,
+          y: e.clientY
+        })
         setMouseClick({
           x: currentPoint!.x,
           y: currentPoint!.y
@@ -75,7 +80,7 @@ export const useClickMove = (
     };
   }, [onDraw]);
 
-  return { canvasRef, onMouseDown, mouseClick, clear };
+  return { canvasRef, onMouseDown, mouseClick, windowClick, clear };
 };
 
 export type Draw = {

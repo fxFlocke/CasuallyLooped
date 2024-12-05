@@ -62,7 +62,7 @@ export function ColorCard() {
       nodes[appState.config.editingIndex - 1].config.hue = 5
       setColorPosition("mt-1 ml-33")
     }
-    dispatch({type:"CHANGE_NODE", data: nodes})
+    dispatch({type:"EDIT", data: nodes})
   }
 
   useEffect(() => {

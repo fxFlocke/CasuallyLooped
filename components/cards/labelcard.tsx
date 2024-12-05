@@ -17,7 +17,7 @@ export function LabelCard() {
     if(appState.config.editingIndex === -1) return
     let nodes = appState.config.nodes
     nodes[appState.config.editingIndex - 1].config.label = newLabel
-    dispatch({type:"CHANGE_NODE", data: nodes})
+    dispatch({type:"EDIT", data: nodes})
   }
 
   return (

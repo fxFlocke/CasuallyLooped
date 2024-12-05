@@ -15,8 +15,7 @@ export type EdgeConfiguration = {
   id: number;
   label: string,
   strength: number;
-  lowBound: number;
-  highBound: number;
+  allowance: number;
 };
 export type EdgeGeometry = {
   arc: number,
@@ -74,12 +73,18 @@ export type Edge = {
   from: number;
   to: number;
   impact: number;
+  allowance: number
 };
+export type EdgeReference = {
+  node: number,
+  edge: number
+}
 export type NodeElement = {
   node: Node;
   config: NodeConfiguration;
   geometry: NodeGeometry;
   edges: EdgeElement[];
+  edgeReferences: EdgeReference[]
 };
 export type EdgeElement = {
   edge: Edge;

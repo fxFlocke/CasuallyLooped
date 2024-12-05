@@ -1,4 +1,5 @@
-import type { ArrowDrawBase, EdgeDrawBase, LabelDrawBase, Position, Bound } from "@/datatypes/commondatatypes";
+import type { ArrowDrawBase, EdgeDrawBase, LabelDrawBase, Position, Bound, NodeElement, EdgeElement } from "@/datatypes/commondatatypes";
+import { getNodeIndexByID } from "@/functionality/searcher";
 import { Node } from "@/datatypes/commondatatypes";
 import { MathCollection } from "@/datatypes/collections";
 import { Point } from "@/hooks/usedraw";
@@ -52,7 +53,7 @@ export function GetPositionAlongArrow(value: number, begin: number, end: number,
 }
 
 //y2, startAngle, endarrowLength, labelX, labelY
-export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: number, rotation: number): [EdgeDrawBase, LabelDrawBase, ArrowDrawBase] {
+export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: number, rotation: number, impact?: number): [EdgeDrawBase, LabelDrawBase, ArrowDrawBase] {
       let radius = 50
       if(arc == 0){
         arc = 0.1
@@ -119,7 +120,9 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
       // } else {
       //   l0 = "";
       // }
-      var impact = 1;
+      if(impact === undefined){
+        impact = 1;
+      }
       var l;
       if (impact > 2) l = "+++";
       else if (impact == 2) l = "++";
@@ -138,9 +141,9 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
       var labelY = (fy + Math.sin(a) * lx + Math.cos(a) * ly) / 2; // un-retina
   
       // ...add offset to label
-      var labelBuffer = 18 * 2; // retina
+      var labelBuffer = 25 * 2; // retina
       if (arc < 0) labelBuffer *= -1;
-      ly += labelBuffer;
+      ly -= labelBuffer;
 
       let edgeDrawBase = {
         f: {
@@ -279,4 +282,78 @@ function rotatePoints(points: Point[], angle: number): Point[]{
     rotatedPoints[i].y = y * Math.cos(angle) + x * Math.sin(angle);
   }
   return rotatedPoints
+}
+
+export function CascadeNodeDragToEdges(startNodeIndex: number, nodes: NodeElement[]): NodeElement[]{
+  var transformedNodes = nodes
+  let startNode = nodes[startNodeIndex]
+
+  for(let i = 0; i < startNode.edges.length; i++){
+    let edge = startNode.edges[i]
+    let endNode = nodes[getNodeIndexByID(edge.edge.to, nodes)]
+    let [newDrawBase, newLabelBase, newArrowBase] = EdgeCreationCalculation(startNode.node, endNode.node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact)
+    edge.geometry.drawBase = newDrawBase
+    edge.geometry.labelDrawBase = newLabelBase
+    edge.geometry.arrowDrawBase = newArrowBase
+    transformedNodes[startNodeIndex].edges[i] = edge
+  }
+
+  for(let i = 0; i < startNode.edgeReferences.length; i++){
+    let refStartNode = nodes[startNode.edgeReferences[i].node]
+    let edge = refStartNode.edges[startNode.edgeReferences[i].edge]
+    let [newDrawBase, newLabelBase, newArrowBase] = EdgeCreationCalculation(refStartNode.node, startNode.node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact)
+    edge.geometry.drawBase = newDrawBase
+    edge.geometry.labelDrawBase = newLabelBase
+    edge.geometry.arrowDrawBase = newArrowBase
+    transformedNodes[startNode.edgeReferences[i].node].edges[startNode.edgeReferences[i].edge] = edge
+  }
+
+  return transformedNodes
+}
+
+export function DragFromToEdge(edge: EdgeElement, from: Node, to: Node, labelX: number, labelY: number){
+  // The Arc: whatever label *Y* is, relative to angle & first node's pos
+  var fx = from.pos.x,
+    fy = from.pos.y,
+    tx = to.pos.x,
+    ty = to.pos.y;
+  var dx = tx - fx,
+    dy = ty - fy;
+  var a = Math.atan2(dy, dx)
+  // Calculate arc
+  var points: Point[] = [{x: labelX, y: labelY}];
+  var translated = translatePoints(points, -fx, -fy);
+  var rotated = rotatePoints(translated, -a);
+  var newLabelPoint = rotated[0]
+  // ooookay.
+  let draggedEdge = edge
+  console.log("arc before: ", draggedEdge.geometry.arc)
+  console.log("arc after: ", -newLabelPoint.y)
+  draggedEdge.geometry.arc = -newLabelPoint.y; // WHY NEGATIVE? I DON'T KNOW.
+  let [drawBase, labelBase, arrowBase] = EdgeCreationCalculation(from, to, draggedEdge.geometry.arc, draggedEdge.geometry.rotation, draggedEdge.edge.impact)
+  draggedEdge.geometry.drawBase = drawBase
+  draggedEdge.geometry.labelDrawBase = labelBase
+  draggedEdge.geometry.arrowDrawBase = arrowBase
+  return draggedEdge
+}
+
+export function DragSelfToSelfEdge(edge: EdgeElement, from: Node, to: Node, labelX: number, labelY: number,){
+  let radius = 50
+  // For SELF-ARROWS: just get angle & mag for label.
+  var dx = labelX - from.pos.x,
+  dy = labelY - from.pos.y;
+  var a = Math.atan2(dy, dx);
+  var mag = Math.sqrt(dx * dx + dy * dy)
+  // Minimum mag
+  var minimum = radius + 25
+  if (mag < minimum) mag = minimum
+  // Update edge
+  let draggedEdge = edge
+  draggedEdge.geometry.arc = mag;
+  draggedEdge.geometry.rotation = a * (360 / MathCollection["tau"]) + 90;
+  let [drawBase, labelBase, arrowBase] = EdgeCreationCalculation(from, to, draggedEdge.geometry.arc, draggedEdge.geometry.rotation, draggedEdge.edge.impact)
+  draggedEdge.geometry.drawBase = drawBase
+  draggedEdge.geometry.labelDrawBase = labelBase
+  draggedEdge.geometry.arrowDrawBase = arrowBase
+  return draggedEdge
 }

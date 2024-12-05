@@ -2,27 +2,29 @@
 import { useEffect, useState, useContext } from "react";
 import { Topbar } from "@/components/bars/topbar";
 import {
-  NodeElement
+  NodeElement, EdgeElement, EdgeReference
 } from "@/datatypes/commondatatypes";
 import { DrawNode } from "@/functionality/draw/drawNode";
 import { DrawEdge } from "@/functionality/draw/drawEdge";
 import { Draw, Point, useClickMove } from "@/hooks/usedraw";
 import { Node } from "@/datatypes/commondatatypes";
 import { AppContext } from "@/state/global";
-import { ScaleCanvasForDevicePixelRatio } from "@/functionality/geometry";
+import { CascadeNodeDragToEdges, DragFromToEdge, DragSelfToSelfEdge, ScaleCanvasForDevicePixelRatio } from "@/functionality/geometry";
 import { CreateEdgeElement, CreateNodeElement } from "@/functionality/creator";
-import { getElementByPoint, getNodeByPoint, getNodeIndexByID, isPointInCanvas } from "@/functionality/searcher";
+import { getEdgeByPoint, getElementByPoint, getNodeByPoint, getNodeIndexByID, isPointInCanvas } from "@/functionality/searcher";
 import { DrawInk } from "@/functionality/draw/drawInk";
 
 var globalNodeID: number = 0;
 var globalEdgeID: number = 0;
 var activePoints: Point[] = [];
+var preventClickAction = false;
 const lineColor = "#FFF"
 
 export function Loopy() {
 
-  const { canvasRef, onMouseDown, mouseClick, clear } = useClickMove(handleClickMove);
+  const { canvasRef, onMouseDown, mouseClick, windowClick, clear } = useClickMove(handleClickMove);
   const [dragNode, setDragNode] = useState(-1)
+  const [dragEdge, setDragEdge] = useState(-1)
   const [appState, dispatch] = useContext(AppContext);
 
   useEffect(() => {
@@ -101,9 +103,15 @@ export function Loopy() {
     let edgeElement = CreateEdgeElement(points, startNode, endNode, edgeUID)
     let nodes = appState.config.nodes
     let nodeIndex = getNodeIndexByID(startNode.id, appState.config.nodes)
+    let endNodeIndex = getNodeIndexByID(endNode.id, appState.config.nodes)
     nodes[nodeIndex].edges.push(edgeElement)
-    dispatch({type: "CHANGE_NODE", data: nodes})
-    dispatch({type: "CHANGE_EDITING_INDEX", data: edgeElement.edge.id})
+    nodes[endNodeIndex].edgeReferences.push({
+      node: nodeIndex,
+      edge: nodes[nodeIndex].edges.length - 1
+    })    
+    dispatch({type: "CHANGE_EDITING_INDEX", data: appState.config.nodes[nodeIndex].node.id})
+    dispatch({type: "CHANGE_EDGE_EDITING_INDEX", data: edgeElement.edge.id})
+    dispatch({type: "EDIT", data: nodes})
   }
 
   function DrawGeometries(){
@@ -117,11 +125,12 @@ export function Loopy() {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     let editingIndex = appState.config.editingIndex
+    let edgeEditingIndex = appState.config.edgeEditingIndex
     let editMode = appState.config.editMode
     clear()
     for (let i = 0; i < appState.config.nodes.length; i++){
       for (let j = 0; j < appState.config.nodes[i].edges.length; j++){
-        DrawEdge(ctx, appState.config.nodes[i].edges[j], editingIndex, editMode)
+        DrawEdge(ctx, appState.config.nodes[i].edges[j], edgeEditingIndex, editMode)
       }
     }
     for (let i = 0; i < appState.config.nodes.length; i++){
@@ -138,11 +147,12 @@ export function Loopy() {
 
   //DRAG-CLICK || END OF DRAG-CLICKED-MOUSE-MOVE
   function handleDragClick(){
-    //End of DRag
+    //End of Drag
     if(dragNode !== -1){
       clear()
       activePoints = []
       setDragNode(-1)
+      setDragEdge(-1)
       DrawGeometries()
       return
     }
@@ -155,8 +165,17 @@ export function Loopy() {
       return
     }
 
+    //Edge licked
+    let [edgeNodeIndex, edgeIndex] = getEdgeByPoint({x: mouseClick.x, y: mouseClick.y}, appState.config.nodes)
+    if(edgeNodeIndex !== -1 ){
+      dispatch({type: "CHANGE_EDIT_MODE", data: "edge"})
+      dispatch({type: "CHANGE_EDITING_INDEX", data: appState.config.nodes[edgeNodeIndex].node.id})
+      dispatch({type: "CHANGE_EDGE_EDITING_INDEX", data: appState.config.nodes[edgeNodeIndex].edges[edgeIndex].edge.id})
+      return
+    }
+
     //Canvas clicked
-    if (isPointInCanvas(mouseClick)){
+    if (isPointInCanvas(mouseClick) && windowClick.y > 120){
       dispatch({type: "CHANGE_EDITING_INDEX", data: -1})
       DrawGeometries()
     }
@@ -164,22 +183,26 @@ export function Loopy() {
 
   //INK-CLICK
   function handleInkClick(){
-    if(appState.config.nodes === undefined){
+    if(appState.config.nodes === undefined || preventClickAction === true){
+      console.log("returned from prevention")
+      preventClickAction = false
       return
     }
-    let [type, id] = getElementByPoint(mouseClick, appState.config.nodes)
-    if (id !== 0 && type === "node"){
+    let [type, nodeID, edgeID] = getElementByPoint(mouseClick, appState.config.nodes)
+    if (nodeID !== 0 && edgeID !== 0 && type === "node"){
       dispatch({type: "CHANGE_EDIT_MODE", data: "node"})
-      dispatch({type: "CHANGE_EDITING_INDEX", data: id})
+      dispatch({type: "CHANGE_EDITING_INDEX", data: nodeID})
       return
     }
-    else if (id !== 0 && type === "edge"){
+    else if (nodeID !== 0 && type === "edge"){
       dispatch({type: "CHANGE_EDIT_MODE", data: "edge"})
-      dispatch({type: "CHANGE_EDITING_INDEX", data: id})
+      dispatch({type: "CHANGE_EDITING_INDEX", data: nodeID})
+      dispatch({type: "CHANGE_EDGE_EDITING_INDEX", data: edgeID})
       return
     }
-    if (isPointInCanvas(mouseClick)){
+    if (isPointInCanvas(mouseClick) && windowClick.y > 120){
       dispatch({type: "CHANGE_EDITING_INDEX", data: -1})
+      dispatch({type: "CHANGE_EDGE_EDITING_INDEX", data: -1})
       return
     }
   }
@@ -192,8 +215,10 @@ export function Loopy() {
     var endNodeID = getNodeByPoint(endPoint, appState.config.nodes);
 
     if ((startNodeID !== -1) && (endNodeID !== -1)) {
-      dispatch({type: "CHANGE_EDIT_MODE", data: "edge"})
+      preventClickAction = true
+      console.log("setted prevent")
       createEdgeInState(activePoints, appState.config.nodes[startNodeID].node, appState.config.nodes[endNodeID].node)
+      dispatch({type: "CHANGE_EDIT_MODE", data: "edge"})
     } else if (startNodeID === -1) {
       dispatch({type: "CHANGE_EDIT_MODE", data: "node"})
       createNodeInState(endPoint);
@@ -208,7 +233,7 @@ export function Loopy() {
         var nodes = appState.config.nodes
         let nodeID = nodes[nodeIndex].node.id
         nodes.splice(nodeIndex, 1)
-        dispatch({type: "CHANGE_NODE", data: nodes})
+        dispatch({type: "EDIT", data: nodes})
         RemoveEdgesToNode(nodes, nodeID)
         return
       }
@@ -223,7 +248,7 @@ export function Loopy() {
         }
       }
     }
-    dispatch({type: "CHANGE_NODE", data: nodes})
+    dispatch({type: "EDIT", data: nodes})
   }
 
 
@@ -251,10 +276,20 @@ export function Loopy() {
     if(dragNode === -1){
         dragDetection(startPoint)
     }
-    if(dragNode === -1){
+    if(dragNode === -1 && dragEdge === -1){
       return
     }
-    handleNodeDrag(newX, newY)
+    if(dragEdge === -1){
+      handleNodeDrag(newX, newY)
+      return
+    }
+    let nodes = appState.config.nodes
+    let edge = nodes[dragNode].edges[dragEdge].edge
+    if(edge.from === edge.to){
+      handleEdgeDrag(newX, newY, true)
+    }else{
+      handleEdgeDrag(newX, newY, false)
+    }
   }
 
   function dragDetection(startPoint: Point){
@@ -267,6 +302,15 @@ export function Loopy() {
       setDragNode(nodeIndex)
       dispatch({type: "CHANGE_EDIT_MODE", data: "node"})
       dispatch({type: "CHANGE_EDITING_INDEX", data: nodes[nodeIndex].node.id})
+      return
+    }
+    let [edgeNodeIndex, edgeIndex] = getEdgeByPoint(startPoint, nodes)
+    if(edgeNodeIndex !== -1){
+      setDragEdge(edgeIndex)
+      setDragNode(edgeNodeIndex)
+      dispatch({type: "CHANGE_EDIT_MODE", data: "edge"})
+      dispatch({type: "CHANGE_EDITING_INDEX", data: appState.config.nodes[edgeNodeIndex].node.id})
+      dispatch({type: "CHANGE_EDGE_EDITING_INDEX", data: appState.config.nodes[edgeNodeIndex].edges[edgeIndex].edge.id})
     }
   }
 
@@ -274,10 +318,24 @@ export function Loopy() {
     let nodes = appState.config.nodes
     nodes[dragNode].node.pos.x = newX
     nodes[dragNode].node.pos.y = newY
-    dispatch({type: "CHANGE_NODE", data: nodes})
+    nodes = CascadeNodeDragToEdges(dragNode, nodes)
+    dispatch({type: "EDIT", data: nodes})
     DrawGeometries()
   }
 
+  function handleEdgeDrag(newX: number, newY: number, self: boolean){
+    let nodes = appState.config.nodes
+    let edge = nodes[dragNode].edges[dragEdge]
+    let fromNode = nodes[getNodeIndexByID(edge.edge.from, nodes)].node
+    let toNode = nodes[getNodeIndexByID(edge.edge.to, nodes)].node
+    if(self){
+      nodes[dragNode].edges[dragEdge] = DragSelfToSelfEdge(edge, fromNode, toNode, newX, newY, )
+    }else{
+      nodes[dragNode].edges[dragEdge] = DragFromToEdge(edge, fromNode, toNode, newX, newY)
+    }
+    dispatch({type: "EDIT", data: nodes})
+    DrawGeometries()
+  }
 
 
   //DECISIONS

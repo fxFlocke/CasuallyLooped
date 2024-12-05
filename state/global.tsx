@@ -11,6 +11,16 @@ export const globalReducer = (state: any, action: any)=>{
                 actionMode: state.config.actionMode,
                 editMode: state.config.editMode,
                 editingIndex: action.data,
+                edgeEditingIndex: state.config.edgeEditingIndex,
+                nodes: state.config.nodes
+            }}
+        }
+        case "CHANGE_EDGE_EDITING_INDEX":{
+            return { ...state, config: {
+                actionMode: state.config.actionMode,
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                edgeEditingIndex: action.data,
                 nodes: state.config.nodes
             }}
         }
@@ -19,6 +29,7 @@ export const globalReducer = (state: any, action: any)=>{
                 actionMode: action.data,
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
+                edgeEditingIndex: state.config.edgeEditingIndex,
                 nodes: state.config.nodes
             }}
         }
@@ -27,25 +38,19 @@ export const globalReducer = (state: any, action: any)=>{
                 actionMode: state.config.actionMode,
                 editMode: action.data,
                 editingIndex: state.config.editingIndex,
+                edgeEditingIndex: state.config.edgeEditingIndex,
                 nodes: state.config.nodes
             }}
         }
-        case "CHANGE_NODE":{
+        case "EDIT":{
             return { ...state, config: {
                 actionMode: state.config.actionMode,
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
+                edgeEditingIndex: state.config.edgeEditingIndex,
                 nodes: action.data
             }}
         }
-        case "CHANGE_EDGE":{
-            return { ...state, config: {
-                actionMode: state.config.actionMode,
-                editMode: state.config.editMode,
-                editingIndex: state.config.editingIndex,
-                nodes: state.config.nodes
-            }}
-        } 
         default:
             return state;
     }
