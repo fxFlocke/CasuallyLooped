@@ -51,10 +51,10 @@ export type Configuration = {
   edge?: EdgeConfiguration;
   geometries: NodeGeometry[]
 };
-export type Loopy = {
-  nodes: Node[];
-};
-export type Signal = {};
+export type Signal = {
+  strength: number
+  position: Position
+}
 export type Position = {
   x: number;
   y: number;
@@ -79,6 +79,10 @@ export type EdgeReference = {
   node: number,
   edge: number
 }
+export type TextElement = {
+  text: string,
+  pos: Position,
+}
 export type NodeElement = {
   node: Node;
   config: NodeConfiguration;
@@ -91,18 +95,10 @@ export type EdgeElement = {
   config: EdgeConfiguration;
   geometry: EdgeGeometry;
 };
-export type LoopyConfiguration = {
-  nodes: NodeConfiguration[];
-  edges: EdgeConfiguration[];
-};
-export type ToolConfigurations = {
-  loopy?: LoopyConfiguration;
-  //all following compatabilities can be extended here
-};
-export type CommonDataDiagram = {
-  nodes: Node[];
-  configs: ToolConfigurations;
-};
+export type Loopy = {
+  nodes: NodeElement[],
+  texts: TextElement[]
+}
 
 //GeometryTypes
 export type Bound = {

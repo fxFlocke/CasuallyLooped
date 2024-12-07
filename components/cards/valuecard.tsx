@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import { AppContext } from "@/state/global";
+import { getNodeIndexByID } from "@/functionality/searcher";
 
 export function ValueCard() {
   const [appState, dispatch] = useContext(AppContext);
@@ -11,7 +12,8 @@ export function ValueCard() {
       setImpactPosition("mt-1 ml-1")
       return
     }
-    let value = appState.config.nodes[appState.config.editingIndex - 1].config.startValue
+    let node = appState.config.nodes[getNodeIndexByID(appState.config.editingIndex, appState.config.nodes)]
+    let value = node.config.startValue
     switch(value){
       case 0:
         setImpactPosition("mt-1 ml-1")
@@ -46,26 +48,27 @@ export function ValueCard() {
     const {left, top} = click.currentTarget.getBoundingClientRect()
     const valuePoint = click.clientX - left
     let nodes = appState.config.nodes
+    let nodeIndex = getNodeIndexByID(appState.config.editingIndex, nodes)
     if(valuePoint < 21.2 ){
-      nodes[appState.config.editingIndex - 1].config.startValue = 0
+      nodes[nodeIndex].config.startValue = 0
       setImpactPosition("mt-1 ml-1")
     }else if(valuePoint < 43){
-      nodes[appState.config.editingIndex - 1].config.startValue = 0.16
+      nodes[nodeIndex].config.startValue = 0.16
       setImpactPosition("mt-1 ml-6.5")
     }else if(valuePoint < 64.5){
-      nodes[appState.config.editingIndex - 1].config.startValue = 0.33
+      nodes[nodeIndex].config.startValue = 0.33
       setImpactPosition("mt-1 ml-12")
     }else if(valuePoint < 86){
-      nodes[appState.config.editingIndex - 1].config.startValue = 0.55
+      nodes[nodeIndex].config.startValue = 0.55
       setImpactPosition("mt-1 ml-18")
     }else if(valuePoint < 107.5){
-      nodes[appState.config.editingIndex - 1].config.startValue = 0.67
+      nodes[nodeIndex].config.startValue = 0.67
       setImpactPosition("mt-1 ml-23")
     }else if(valuePoint < 129){
-      nodes[appState.config.editingIndex - 1].config.startValue = 0.83
+      nodes[nodeIndex].config.startValue = 0.83
       setImpactPosition("mt-1 ml-28")
     }else{
-      nodes[appState.config.editingIndex - 1].config.startValue = 1
+      nodes[nodeIndex].config.startValue = 1
       setImpactPosition("mt-1 ml-34")
     }
     dispatch({type:"EDIT", data: nodes})

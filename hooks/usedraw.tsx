@@ -1,16 +1,27 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import type { Position } from '@/datatypes/commondatatypes'
+import { AppContext } from "@/state/global";
 
 export const useClickMove = (
   onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void
 ) => {
+  const [appState, dispatch] = useContext(AppContext);
+
   const [mouseDown, setMouseDown] = useState(false);
+  const [mouseMove, setMouseMove] = useState<Position>({x: 0, y: 0})
   const [mouseClick, setMouseClick] = useState<Position>({ x: 0, y: 0});
   const [windowClick, setWindowClick] = useState<Position>({ x: 0, y: 0})
+  const [zoom, setZoom] = useState<ZoomEvent>({
+    x: 0,
+    y: 0,
+    zoom: 1
+  })
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prevPoint = useRef<null | Point>(null);
+
+  let zoomIntesity = 0.05
 
   const onMouseDown = () => setMouseDown(true);
 
@@ -26,8 +37,14 @@ export const useClickMove = (
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (!mouseDown) return;
       const currentPoint = computePointInCanvas(e);
+      if (!mouseDown) {
+        if(appState.config.actionMode === "simulate"){
+          setMouseMove({x: currentPoint!.x, y: currentPoint!.y})
+        }
+        return
+      };
+
 
       const ctx = canvasRef.current?.getContext("2d");
       if (!ctx || !currentPoint) return;
@@ -60,8 +77,8 @@ export const useClickMove = (
           y: e.clientY
         })
         setMouseClick({
-          x: currentPoint!.x,
-          y: currentPoint!.y
+          x: currentPoint!.x / zoom.zoom,
+          y: currentPoint!.y / zoom.zoom
         });
       }
     };
@@ -70,7 +87,6 @@ export const useClickMove = (
     canvasRef.current?.addEventListener("mousemove", handler);
     window.addEventListener("mouseup", mouseUpHandler);
     window.addEventListener("click", mouseClickHandler);
-
     // Remove event listeners
     return () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,7 +96,7 @@ export const useClickMove = (
     };
   }, [onDraw]);
 
-  return { canvasRef, onMouseDown, mouseClick, windowClick, clear };
+  return { canvasRef, onMouseDown, mouseClick, mouseMove, windowClick, clear, zoom };
 };
 
 export type Draw = {
@@ -88,5 +104,11 @@ export type Draw = {
   currentPoint: Point;
   prevPoint: Point | null;
 };
+
+export type ZoomEvent = {
+  x: number,
+  y: number,
+  zoom: number
+}
 
 export type Point = { x: number; y: number };

@@ -41,31 +41,31 @@ export function AllowanceCard() {
         let edgeIndex = getEdgeIndexByID(appState.config.edgeEditingIndex, node.edges)
         if(valuePoint < 75 ){
           if (nodes[nodeIndex].edges[edgeIndex].edge.allowance !== 1){
-            if(nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.includes("(-) -> ")){
-                nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.substring(7)
+            if(nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.includes("- -> ")){
+                nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.substring(5)
             }
             nodes[nodeIndex].edges[edgeIndex].edge.allowance = 1
-            nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = "(+) -> " + nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l
+            nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = "+ -> " + nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l
             setImpactPosition("mt-2 ml-7.5")
           }else{
             nodes[nodeIndex].edges[edgeIndex].edge.allowance = 0
             if(nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.length > 1){
-                nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.substring(7)
+                nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.substring(5)
             }
             setImpactPosition("opacity-0")
           }
         }else if(valuePoint < 150){
           if(nodes[nodeIndex].edges[edgeIndex].edge.allowance !== -1){   
-            if(nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.includes("(+) -> ")){
-                nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.substring(7)
+            if(nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.includes("+ -> ")){
+                nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.substring(5)
             }
             nodes[nodeIndex].edges[edgeIndex].edge.allowance = -1
-            nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = "(-) -> " + nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l
+            nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = "- -> " + nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l
             setImpactPosition("mt-2 ml-26")
           } else{
             nodes[nodeIndex].edges[edgeIndex].edge.allowance = 0
             if(nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.length > 1){
-              nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.substring(7)
+              nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l = nodes[nodeIndex].edges[edgeIndex].geometry.labelDrawBase.l.substring(5)
             }
             setImpactPosition("opacity-0")
           }

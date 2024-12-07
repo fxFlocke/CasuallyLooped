@@ -1,13 +1,15 @@
 import { useContext } from "react";
 import { AppContext } from "@/state/global";
 import { NodeConfiguration } from "@/datatypes/commondatatypes";
+import { getNodeIndexByID } from "@/functionality/searcher";
 
 export function LabelCard() {
   const [ appState, dispatch ] = useContext(AppContext);
 
   function evaluateInputValue(): string{
-    if(appState.config.nodes.length >= appState.config.editingIndex && appState.config.editingIndex !== -1){
-      return appState.config.nodes[appState.config.editingIndex - 1].config.label 
+    if(appState.config.editingIndex !== -1){
+      let node = appState.config.nodes[getNodeIndexByID(appState.config.editingIndex, appState.config.nodes)]
+      return node.config.label 
     }
     return ""
   }
@@ -16,7 +18,8 @@ export function LabelCard() {
     if(appState.config.nodes === undefined) return
     if(appState.config.editingIndex === -1) return
     let nodes = appState.config.nodes
-    nodes[appState.config.editingIndex - 1].config.label = newLabel
+    let nodeIndex = getNodeIndexByID(appState.config.editingIndex, appState.config.nodes)
+    nodes[nodeIndex].config.label = newLabel
     dispatch({type:"EDIT", data: nodes})
   }
 

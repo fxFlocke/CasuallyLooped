@@ -1,9 +1,12 @@
 import { IsPointInElement } from "@/functionality/geometry";
-import { NodeElement, EdgeElement, Position } from "@/datatypes/commondatatypes";
+import { NodeElement, EdgeElement, Position, TextElement } from "@/datatypes/commondatatypes";
 import { useContext } from "react";
 import { AppContext } from "@/state/global";
 
 export function getElementByPoint(point: Position, nodes: NodeElement[]): [string, number, number] {
+    if(!isPointInCanvas(point)){
+      return ["notInCanvas", 0, 0]
+    }
     let nodeID = getNodeIdByPoint(point, nodes)
     if (nodeID !== -1){
       return ["node", nodeID, -1]
@@ -13,6 +16,21 @@ export function getElementByPoint(point: Position, nodes: NodeElement[]): [strin
       return ["edge", edgeNodeID, edgeID]
     }
     return ["nil", 0, 0]
+}
+
+export function getNoteByPoint(point: Position, texts: TextElement[]): number {
+
+  if(!isPointInCanvas(point)){
+    return -1
+  }
+
+  for(let i = 0; i < texts.length; i++){
+    if(IsPointInElement(point, texts[i].pos, 75)){
+      return i
+    }
+  }
+
+  return -1
 }
 
 export function getNodeByPoint(point: Position, nodes: NodeElement[]): number {
@@ -73,6 +91,22 @@ export function getEdgeIndexByID(id: number, edges: EdgeElement[]){
     }
   }
   return -1
+}
+
+export function getNodeByID(id: number, nodes: NodeElement[]){
+  for(let i = 0; i < nodes.length; i++){
+    if(nodes[i].node.id === id){
+      return nodes[i]
+    }
+  }
+}
+
+export function getEdgeByID(id: number, edges: EdgeElement[]){
+  for(let i = 0; i < edges.length; i++){
+    if(edges[i].edge.id === id){
+      return edges[i]
+    }
+  }
 }
 
 export  function isPointInCanvas(point: Position): boolean {

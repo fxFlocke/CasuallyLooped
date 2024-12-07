@@ -44,14 +44,14 @@ export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editi
     ctx.stroke();
 
     // Draw label
-    ctx.font = "100 40px sans-serif";
+    ctx.font = "100 32px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.save();
     ctx.translate((edge.geometry.labelDrawBase.lp.x / 2), (edge.geometry.labelDrawBase.lp.y / 2));
     ctx.rotate(-edge.geometry.drawBase.a);
-    ctx.fillStyle = "#888";
-    ctx.fillText(edge.geometry.labelDrawBase.l, 0, 0);
+    ctx.fillStyle = "#fff";
+    ctx.fillText(edge.geometry.labelDrawBase.l, 1, 1);
 
     ctx.restore();
     ctx.restore()

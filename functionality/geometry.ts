@@ -1,5 +1,5 @@
 import type { ArrowDrawBase, EdgeDrawBase, LabelDrawBase, Position, Bound, NodeElement, EdgeElement } from "@/datatypes/commondatatypes";
-import { getNodeIndexByID } from "@/functionality/searcher";
+import { getEdgeByID, getEdgeIndexByID, getNodeByID, getNodeIndexByID } from "@/functionality/searcher";
 import { Node } from "@/datatypes/commondatatypes";
 import { MathCollection } from "@/datatypes/collections";
 import { Point } from "@/hooks/usedraw";
@@ -15,6 +15,20 @@ export function IsPointInElement(pointPos: Position, elementPos: Position, r: nu
 
   // Inside?
   return dist2 <= r2;
+}
+
+export function IsPointInUpperHalf(pointPos: Position, elementPos: Position, r: number): number {
+  let upperPos: Position = {
+    x: elementPos.x,
+    y: elementPos.y
+  }
+  upperPos.y -= 30
+  if(IsPointInElement(pointPos, upperPos, r)){
+    return 1
+  }else if(IsPointInElement(pointPos, elementPos, r)){
+    return -1
+  }
+  return 0
 }
 
 export function ScaleCanvasForDevicePixelRatio(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D | null) {
@@ -182,7 +196,7 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
 export function CalculateEdgeRotationAndArc(strokeData: Point[], startNode: Node, endNode: Node): [number, number]{
   let startPos = startNode.pos
   let endPos = endNode.pos
-  let radius = 50
+  let radius = 30
 
   var rotation: number
   var arc: number
@@ -299,13 +313,15 @@ export function CascadeNodeDragToEdges(startNodeIndex: number, nodes: NodeElemen
   }
 
   for(let i = 0; i < startNode.edgeReferences.length; i++){
-    let refStartNode = nodes[startNode.edgeReferences[i].node]
-    let edge = refStartNode.edges[startNode.edgeReferences[i].edge]
+    let nodeIndex = getNodeIndexByID(startNode.edgeReferences[i].node, nodes)
+    let refStartNode = nodes[nodeIndex]
+    let edgeIndex = getEdgeIndexByID(startNode.edgeReferences[i].edge, refStartNode.edges)
+    let edge = refStartNode.edges[edgeIndex]
     let [newDrawBase, newLabelBase, newArrowBase] = EdgeCreationCalculation(refStartNode.node, startNode.node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact)
     edge.geometry.drawBase = newDrawBase
     edge.geometry.labelDrawBase = newLabelBase
     edge.geometry.arrowDrawBase = newArrowBase
-    transformedNodes[startNode.edgeReferences[i].node].edges[startNode.edgeReferences[i].edge] = edge
+    transformedNodes[nodeIndex].edges[edgeIndex] = edge
   }
 
   return transformedNodes
@@ -356,4 +372,30 @@ export function DragSelfToSelfEdge(edge: EdgeElement, from: Node, to: Node, labe
   draggedEdge.geometry.labelDrawBase = labelBase
   draggedEdge.geometry.arrowDrawBase = arrowBase
   return draggedEdge
+}
+
+export function ScaleElements(scale: number, nodes: NodeElement[]): NodeElement[]{
+  for(let i = 0; i < nodes.length; i++){
+    let node = nodes[i]
+    node.node.pos.x *= scale
+    node.node.pos.y *= scale
+    node.config.radius *= scale
+    nodes[i] = node
+  }
+
+  // for(let i = 0; i < nodes.length; i++){
+  //   let node = nodes[i]
+  //   for(let j = 0; j < node.edges.length; j++){
+  //     let edge = node.edges[j]
+  //     let toNodeIndex = getNodeIndexByID(edge.edge.to, nodes)
+  //     let [newDrawBase, newLabelBase, newArrowBase] = EdgeCreationCalculation(node.node, nodes[toNodeIndex].node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact)
+  //     edge.geometry.drawBase = newDrawBase
+  //     edge.geometry.labelDrawBase = newLabelBase
+  //     edge.geometry.arrowDrawBase = newArrowBase
+  //     node.edges[j] = edge
+  //   }
+  //   nodes[i] = node
+  // }
+
+  return nodes
 }

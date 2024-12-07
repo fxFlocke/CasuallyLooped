@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import Image from "next/image";
 import { AppContext } from "@/state/global";
+import { getNodeIndexByID } from "@/functionality/searcher";
 
 export function ColorCard() {
   const [appState, dispatch] = useContext(AppContext);
@@ -11,7 +12,8 @@ export function ColorCard() {
       setColorPosition("mt-1 ml-1")
       return
     }
-    let color = appState.config.nodes[appState.config.editingIndex - 1].config.hue
+    let node = appState.config.nodes[getNodeIndexByID(appState.config.editingIndex, appState.config.nodes)]
+    let color = node.config.hue
     switch(color){
       case 0:
         setColorPosition("mt-1 ml-1")
@@ -43,23 +45,24 @@ export function ColorCard() {
     const {left, top} = click.currentTarget.getBoundingClientRect()
     const imgPoint = click.clientX - left
     let nodes = appState.config.nodes
+    let nodeIndex = getNodeIndexByID(appState.config.editingIndex, nodes)
     if(imgPoint < 25 ){
-      nodes[appState.config.editingIndex - 1].config.hue = 0
+      nodes[nodeIndex].config.hue = 0
       setColorPosition("mt-1 ml-1")
     }else if(imgPoint < 50){
-      nodes[appState.config.editingIndex - 1].config.hue = 1
+      nodes[nodeIndex].config.hue = 1
       setColorPosition("mt-1 ml-7.5")
     }else if(imgPoint < 75){
-      nodes[appState.config.editingIndex - 1].config.hue = 2
+      nodes[nodeIndex].config.hue = 2
       setColorPosition("mt-1 ml-14")
     }else if(imgPoint < 100){
-      nodes[appState.config.editingIndex - 1].config.hue = 3
+      nodes[nodeIndex].config.hue = 3
       setColorPosition("mt-1 ml-21")
     }else if(imgPoint < 125){
-      nodes[appState.config.editingIndex - 1].config.hue = 4
+      nodes[nodeIndex].config.hue = 4
       setColorPosition("mt-1 ml-26")
     }else{
-      nodes[appState.config.editingIndex - 1].config.hue = 5
+      nodes[nodeIndex].config.hue = 5
       setColorPosition("mt-1 ml-33")
     }
     dispatch({type:"EDIT", data: nodes})
@@ -67,6 +70,7 @@ export function ColorCard() {
 
   useEffect(() => {
     detectInitialColor()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState])
   
   return (

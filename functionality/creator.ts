@@ -66,7 +66,7 @@ function createDefaultNodeConfiguration(){
           startValue: 0.83,
           label: "",
           hue: 4,
-          radius: 50,
+          radius: 25,
       } as NodeConfiguration;
 }
 

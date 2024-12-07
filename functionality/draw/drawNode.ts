@@ -2,7 +2,11 @@ import { NodeElement } from "@/datatypes/commondatatypes";
 import { ColorCollection, MathCollection } from "@/datatypes/collections";
 import { DrawText } from "./drawText";
 
-export function DrawNode(ctx: CanvasRenderingContext2D, node: NodeElement, editingIndex: number, editMode: string) {
+export function DrawNode(ctx: CanvasRenderingContext2D, node: NodeElement, editingIndex: number, editMode: string, actionMode: string) {
+    // let scale = 0.8
+    // node.node.pos.x *= scale
+    // node.node.pos.y *= scale
+    // node.config.radius *= scale
     var x = Math.round(node.node.pos.x) //.pos.x;
     var y = Math.round(node.node.pos.y);
     var r = Math.round(node.config.radius); //replace later
@@ -16,17 +20,16 @@ export function DrawNode(ctx: CanvasRenderingContext2D, node: NodeElement, editi
     if (editingIndex == node.node.id && editMode === "node") {
       //Draw Highlight
       ctx.beginPath();
-      ctx.arc(0, 0, r + 20, 0, MathCollection["tau"], false);
+      ctx.arc(0, 0, r + 10, 0, MathCollection["tau"], false);
       ctx.fillStyle = ColorCollection[6];
       ctx.fill();
       //Take label
-      
     }
   
     // White-gray bubble with colored border
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, MathCollection["tau"], false);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#3b403c";
     ctx.fill();
     ctx.lineWidth = 3;
     ctx.strokeStyle = color;
@@ -67,30 +70,32 @@ export function DrawNode(ctx: CanvasRenderingContext2D, node: NodeElement, editi
     }
 
     // Text!
-    DrawText(ctx, node.config.label, r)
+    DrawText(ctx, node.config.label, r*r)
   
-    // WOBBLE CONTROLS
-    var cl = 40;
-    var cy = 0;
-  
-    // Controls!
-    ctx.globalAlpha = node.geometry.controlsAlpha;
-    ctx.strokeStyle = "rgba(0,0,0,0.8)";
-    // top arrow
-    ctx.beginPath();
-    ctx.moveTo(-cl, -cy - cl);
-    ctx.lineTo(0, -cy - cl * 2);
-    ctx.lineTo(cl, -cy - cl);
-    ctx.lineWidth = node.geometry.controlsDirection > 0 ? 10 : 3;
-    ctx.stroke();
-    // bottom arrow
-    ctx.beginPath();
-    ctx.moveTo(-cl, cy + cl);
-    ctx.lineTo(0, cy + cl * 2);
-    ctx.lineTo(cl, cy + cl);
-    ctx.lineWidth = node.geometry.controlsDirection < 0 ? 10 : 3;
-    ctx.stroke();
-  
+    if(actionMode === "simulate"){
+      // WOBBLE CONTROLS
+      var cl = 8;
+      var cy = 0;
+      
+      // Controls!
+      ctx.globalAlpha = 1 //node.geometry.controlsAlpha;
+      ctx.strokeStyle = "rgba(0,0,0,1)";
+      // top arrow
+      ctx.beginPath();
+      ctx.moveTo(-cl, -cy - cl);
+      ctx.lineTo(0, -cy - cl * 2);
+      ctx.lineTo(cl, -cy - cl);
+      ctx.lineWidth = node.geometry.controlsDirection > 0 ? 4 : 2;
+      ctx.stroke();
+      // bottom arrow
+      ctx.beginPath();
+      ctx.moveTo(-cl, cy + cl);
+      ctx.lineTo(0, cy + cl * 2);
+      ctx.lineTo(cl, cy + cl);
+      ctx.lineWidth = node.geometry.controlsDirection < 0 ? 4 : 2;
+      ctx.stroke();
+    }
+
     // Restore
     ctx.restore();
 }

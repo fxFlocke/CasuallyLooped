@@ -1,4 +1,4 @@
-import { NodeConfiguration, NodeElement } from '@/datatypes/commondatatypes'
+import { NodeConfiguration, NodeElement, TextElement } from '@/datatypes/commondatatypes'
 import React, { useReducer } from 'react'
 
 export const globalReducer = (state: any, action: any)=>{
@@ -12,7 +12,8 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: action.data,
                 edgeEditingIndex: state.config.edgeEditingIndex,
-                nodes: state.config.nodes
+                nodes: state.config.nodes,
+                texts: state.config.texts
             }}
         }
         case "CHANGE_EDGE_EDITING_INDEX":{
@@ -21,7 +22,8 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: action.data,
-                nodes: state.config.nodes
+                nodes: state.config.nodes,
+                texts: state.config.texts
             }}
         }
         case "CHANGE_ACTION_MODE":{
@@ -30,7 +32,8 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: state.config.edgeEditingIndex,
-                nodes: state.config.nodes
+                nodes: state.config.nodes,
+                texts: state.config.texts
             }}
         }
         case "CHANGE_EDIT_MODE":{
@@ -39,7 +42,8 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: action.data,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: state.config.edgeEditingIndex,
-                nodes: state.config.nodes
+                nodes: state.config.nodes,
+                texts: state.config.texts
             }}
         }
         case "EDIT":{
@@ -48,7 +52,18 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: state.config.edgeEditingIndex,
-                nodes: action.data
+                nodes: action.data,
+                texts: state.config.texts
+            }}
+        }
+        case "EDIT_TEXTS":{
+            return { ...state, config: {
+                actionMode: state.config.actionMode,
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                edgeEditingIndex: state.config.edgeEditingIndex,
+                nodes: state.config.nodes,
+                texts: action.data
             }}
         }
         default:
@@ -65,13 +80,16 @@ const initialNode: NodeConfiguration = {
 }
 
 const initialNodes: NodeElement[] = []
+const initialTexts: TextElement[] = []
 
 const initialAppState: any = {
     config: {
         actionMode: "ink",
         editMode: "node",
         editingIndex: -1,
-        nodes: initialNodes
+        edgeEditingIndex: -1,
+        nodes: initialNodes,
+        texts: initialTexts
     }
 }
 
