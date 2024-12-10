@@ -29,7 +29,7 @@ export function LabelCard() {
         <div className="justify-start pt-[10px] pl-[15px] h-28">
           <label
             form="name"
-            className="pr-[100px] block mb-2 text-sm font-light text-black dark:text-gray-300">
+            className="pr-[100px] block mb-2 text-sm font-light text-white dark:text-gray-300">
             Label
           </label>
           <input

@@ -79,7 +79,7 @@ export function ColorCard() {
         <div className="pt-[10px] pl-1 h-28">
           <label
             form="color"
-            className="pr-1 pb-4 text-sm font-light text-black dark:text-gray-300">
+            className="pr-1 pb-4 text-sm font-light text-white dark:text-gray-300">
             Color
           </label>
           <Image
