@@ -1,7 +1,9 @@
 import { ColorCollection, MathCollection } from "@/datatypes/collections";
-import { EdgeElement, NodeElement, Position } from "@/datatypes/commondatatypes";
+import { EdgeElement, NodeElement, Position, Signal } from "@/datatypes/commondatatypes";
+import { getEdgeIndexByID, getNodeByID } from "../searcher";
+import { DrawSignal } from "./drawSignal";
 
-export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editingIndex: number, editMode: string){
+export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editingIndex: number, editMode: string, signals?: Signal[], nodes?: NodeElement[]){
     if (edge.geometry.arc == 0) edge.geometry.arc = 0.1;
 
     // Width & Color
@@ -54,5 +56,17 @@ export function DrawEdge(ctx: CanvasRenderingContext2D, edge: EdgeElement, editi
     ctx.fillText(edge.geometry.labelDrawBase.l, 1, 1);
 
     ctx.restore();
+
+    if(signals!== undefined && nodes !== undefined){
+      for(let i = 0; i < signals.length; i++){
+        if(signals[i].identifiers.edgeID === edge.edge.id){
+          let node = getNodeByID(signals[i].identifiers.nodeID, nodes)
+          let edgeIndex = getEdgeIndexByID(signals[i].identifiers.edgeID, node!.edges)
+          DrawSignal(ctx, signals[i], node!.edges[edgeIndex].geometry, nodes)
+          // ctx.restore()
+        }
+      }
+    }
+
     ctx.restore()
   }

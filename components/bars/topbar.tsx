@@ -29,7 +29,7 @@ export function Topbar() {
             <TextBar/>)}
           {appState.config.editMode === "" && (
             <InformationBar/>)}
-          {appState.config.actionMode === "simulate" && (
+          {appState.config.actionMode === "simulate" && appState.config.editMode !== "" && (
             <SimulationBar/>)}
         </div>
       </div>

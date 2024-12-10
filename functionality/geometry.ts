@@ -1,4 +1,4 @@
-import type { ArrowDrawBase, EdgeDrawBase, LabelDrawBase, Position, Bound, NodeElement, EdgeElement } from "@/datatypes/commondatatypes";
+import type { ArrowDrawBase, EdgeDrawBase, LabelDrawBase, Position, Bound, NodeElement, EdgeElement, TextElement } from "@/datatypes/commondatatypes";
 import { getEdgeByID, getEdgeIndexByID, getNodeByID, getNodeIndexByID } from "@/functionality/searcher";
 import { Node } from "@/datatypes/commondatatypes";
 import { MathCollection } from "@/datatypes/collections";
@@ -50,16 +50,15 @@ export function GetPositionAlongArrow(value: number, begin: number, end: number,
   if (y < 0) {
     // DON'T KNOW WHY THIS WORKS, BUT IT DOES.
     if (begin2 > 0) {
-      begin2 -= MathCollection.tau;
+      begin2 -= MathCollection["tau"];
     } else {
-      begin2 += MathCollection.tau;
+      begin2 += MathCollection["tau"];
     }
   }
 
   // Get angle!
   var angle = begin2 + (end - begin2) * input;
 
-  // return x & y
   return {
     x: w / 2 + Math.cos(angle) * r,
     y: y2 + Math.sin(angle) * r,
@@ -67,7 +66,7 @@ export function GetPositionAlongArrow(value: number, begin: number, end: number,
 }
 
 //y2, startAngle, endarrowLength, labelX, labelY
-export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: number, rotation: number, impact?: number): [EdgeDrawBase, LabelDrawBase, ArrowDrawBase] {
+export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: number, rotation: number, impact?: number, allowance?: number): [EdgeDrawBase, LabelDrawBase, ArrowDrawBase] {
       let radius = 50
       if(arc == 0){
         arc = 0.1
@@ -126,25 +125,22 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
       var ay = y2 + Math.sin(end) * r;
       var aa = end + MathCollection.tau / 4;
   
-      var l0;
-      // if (self.allowance == 1) {
-      //   l0 = "(+)->";
-      // } else if (self.allowance == -1) {
-      //   l0 = "(-)->";
-      // } else {
-      //   l0 = "";
-      // }
       if(impact === undefined){
         impact = 1;
       }
-      var l;
-      if (impact > 2) l = "+++";
-      else if (impact == 2) l = "++";
-      else if (impact == 1) l = "+";
-      else if (impact == 0) l = "?";
-      else if (impact == -3) l = "– – –"; // EM dash, not hyphen.
-      else if (impact == -2) l = "– –";
-      else l = "–";
+      var l = "";
+      if(allowance === 1){
+        l += "+ -> "
+      } else if(allowance === -1){
+        l += "- -> "
+      }
+      if (impact > 2) l += "+++";
+      else if (impact == 2) l += "++";
+      else if (impact == 1) l += "+";
+      else if (impact == 0) l += "?";
+      else if (impact == -3) l += "– – –"; // EM dash, not hyphen.
+      else if (impact == -2) l += "– –";
+      else l += "–";
   
       var labelPosition = GetPositionAlongArrow(0.5, begin, end, w, r, y, y2);
       var lx = labelPosition.x;
@@ -171,6 +167,7 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
         a: a,
         aa: aa,
         w: w,
+        y: y,
         y2: y2,
         r: r
       }
@@ -187,6 +184,7 @@ export function EdgeCreationCalculation(startNode: Node, endNode: Node, arc: num
       }
       let arrowDrawBase = {
         startAngle: startAngle,
+        begin: begin,
         end: end,
         arrowLength: arrowLength
       }
@@ -305,7 +303,7 @@ export function CascadeNodeDragToEdges(startNodeIndex: number, nodes: NodeElemen
   for(let i = 0; i < startNode.edges.length; i++){
     let edge = startNode.edges[i]
     let endNode = nodes[getNodeIndexByID(edge.edge.to, nodes)]
-    let [newDrawBase, newLabelBase, newArrowBase] = EdgeCreationCalculation(startNode.node, endNode.node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact)
+    let [newDrawBase, newLabelBase, newArrowBase] = EdgeCreationCalculation(startNode.node, endNode.node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact, edge.edge.allowance)
     edge.geometry.drawBase = newDrawBase
     edge.geometry.labelDrawBase = newLabelBase
     edge.geometry.arrowDrawBase = newArrowBase
@@ -317,7 +315,7 @@ export function CascadeNodeDragToEdges(startNodeIndex: number, nodes: NodeElemen
     let refStartNode = nodes[nodeIndex]
     let edgeIndex = getEdgeIndexByID(startNode.edgeReferences[i].edge, refStartNode.edges)
     let edge = refStartNode.edges[edgeIndex]
-    let [newDrawBase, newLabelBase, newArrowBase] = EdgeCreationCalculation(refStartNode.node, startNode.node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact)
+    let [newDrawBase, newLabelBase, newArrowBase] = EdgeCreationCalculation(refStartNode.node, startNode.node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact, edge.edge.allowance)
     edge.geometry.drawBase = newDrawBase
     edge.geometry.labelDrawBase = newLabelBase
     edge.geometry.arrowDrawBase = newArrowBase
@@ -343,10 +341,8 @@ export function DragFromToEdge(edge: EdgeElement, from: Node, to: Node, labelX: 
   var newLabelPoint = rotated[0]
   // ooookay.
   let draggedEdge = edge
-  console.log("arc before: ", draggedEdge.geometry.arc)
-  console.log("arc after: ", -newLabelPoint.y)
   draggedEdge.geometry.arc = -newLabelPoint.y; // WHY NEGATIVE? I DON'T KNOW.
-  let [drawBase, labelBase, arrowBase] = EdgeCreationCalculation(from, to, draggedEdge.geometry.arc, draggedEdge.geometry.rotation, draggedEdge.edge.impact)
+  let [drawBase, labelBase, arrowBase] = EdgeCreationCalculation(from, to, draggedEdge.geometry.arc, draggedEdge.geometry.rotation, draggedEdge.edge.impact, draggedEdge.edge.allowance)
   draggedEdge.geometry.drawBase = drawBase
   draggedEdge.geometry.labelDrawBase = labelBase
   draggedEdge.geometry.arrowDrawBase = arrowBase
@@ -367,7 +363,7 @@ export function DragSelfToSelfEdge(edge: EdgeElement, from: Node, to: Node, labe
   let draggedEdge = edge
   draggedEdge.geometry.arc = mag;
   draggedEdge.geometry.rotation = a * (360 / MathCollection["tau"]) + 90;
-  let [drawBase, labelBase, arrowBase] = EdgeCreationCalculation(from, to, draggedEdge.geometry.arc, draggedEdge.geometry.rotation, draggedEdge.edge.impact)
+  let [drawBase, labelBase, arrowBase] = EdgeCreationCalculation(from, to, draggedEdge.geometry.arc, draggedEdge.geometry.rotation, draggedEdge.edge.impact, draggedEdge.edge.allowance)
   draggedEdge.geometry.drawBase = drawBase
   draggedEdge.geometry.labelDrawBase = labelBase
   draggedEdge.geometry.arrowDrawBase = arrowBase
@@ -398,4 +394,64 @@ export function ScaleElements(scale: number, nodes: NodeElement[]): NodeElement[
   // }
 
   return nodes
+}
+
+export function GetArrowLength(edge: EdgeElement, ){
+  var angle;
+  if (edge.edge.from == edge.edge.to) {
+    // angle = Math.TAU;
+    return edge.geometry.drawBase.r * MathCollection["tau"] - 2 * 25;
+  } else {
+    //debugger;
+    if (edge.geometry.drawBase.y < 0) {
+      // arc's center is above the horizon
+      if (edge.geometry.arc < 0) {
+        // ccw
+        angle = MathCollection["tau"] + edge.geometry.arrowDrawBase.begin - edge.geometry.arrowDrawBase.end;
+      } else {
+        // cw
+        angle = MathCollection["tau"] + edge.geometry.arrowDrawBase.end - edge.geometry.arrowDrawBase.begin;
+      }
+    } else {
+      // arc's center is below the horizon
+      angle = Math.abs(edge.geometry.arrowDrawBase.end - edge.geometry.arrowDrawBase.begin);
+    }
+  }
+  return edge.geometry.drawBase.r * angle;
+}
+
+export function AdjustNodePositions(nodes: NodeElement[], oldDimensions: Position, newDimensions: Position): NodeElement[] {
+  let adjustedNodes = nodes
+  let scaleX = (newDimensions.x / oldDimensions.x)
+  let scaleY = (newDimensions.y / oldDimensions.y)
+  for(let i = 0; i < nodes.length; i++){
+    adjustedNodes[i].node.pos.x *= scaleX
+    adjustedNodes[i].node.pos.y *= scaleY
+  }
+
+  for(let i = 0; i < nodes.length; i++){
+    for(let j = 0; j < nodes[i].edges.length; j++){
+      let edge = nodes[i].edges[j]
+      let startNode = getNodeByID(edge.edge.from, adjustedNodes)
+      let endNode = getNodeByID(edge.edge.to, adjustedNodes)
+      let [ drawBase, labelBase, arrowBase ] = EdgeCreationCalculation(startNode!.node, endNode!.node, edge.geometry.arc, edge.geometry.rotation, edge.edge.impact, edge.edge.allowance)
+      adjustedNodes[i].edges[j].geometry.drawBase = drawBase
+      adjustedNodes[i].edges[j].geometry.labelDrawBase = labelBase
+      adjustedNodes[i].edges[j].geometry.arrowDrawBase = arrowBase
+    }
+  }
+
+  return adjustedNodes
+}
+
+export function AdjustTextPositions(texts: TextElement[], oldDimensions: Position, newDimensions: Position): TextElement[] {
+  let adjustedTexts = texts
+  let scaleX = oldDimensions.x / newDimensions.x
+  let scaleY = oldDimensions.y / newDimensions.y
+  for(let i = 0; i < texts.length; i++){
+    adjustedTexts[i].pos.x *= scaleX
+    adjustedTexts[i].pos.y *= scaleY
+  }
+
+  return adjustedTexts
 }

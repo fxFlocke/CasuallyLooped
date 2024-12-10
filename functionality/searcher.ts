@@ -1,5 +1,5 @@
 import { IsPointInElement } from "@/functionality/geometry";
-import { NodeElement, EdgeElement, Position, TextElement } from "@/datatypes/commondatatypes";
+import { NodeElement, EdgeElement, Position, TextElement, Signal } from "@/datatypes/commondatatypes";
 import { useContext } from "react";
 import { AppContext } from "@/state/global";
 
@@ -109,9 +109,19 @@ export function getEdgeByID(id: number, edges: EdgeElement[]){
   }
 }
 
-export  function isPointInCanvas(point: Position): boolean {
+export function isPointInCanvas(point: Position): boolean {
     if(point.y < 0){
       return false
     }
     return true
+}
+
+export function GetSignalCountOnEdge(signals: Signal[], edgeID: number): number {
+  let signalCount = 0
+  for(let i = 0; i < signals.length; i++){
+    if(signals[i].identifiers.edgeID === edgeID){
+      signalCount += 1
+    }
+  }
+  return signalCount
 }

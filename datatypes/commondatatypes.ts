@@ -32,6 +32,7 @@ export type EdgeDrawBase = {
   a: number,
   aa: number,
   w: number,
+  y: number,
   y2: number,
   r: number
 }
@@ -42,6 +43,7 @@ export type LabelDrawBase = {
 }
 export type ArrowDrawBase = {
   startAngle: number,
+  begin: number,
   end: number,
   arrowLength: number
 }
@@ -52,8 +54,16 @@ export type Configuration = {
   geometries: NodeGeometry[]
 };
 export type Signal = {
+  identifiers: SignalIdentifiers,
+  delta: number
+  position: number
+  scale: number
+}
+export type SignalIdentifiers = {
   strength: number
-  position: Position
+  nodeID: number,
+  edgeID: number
+  receiverID: number
 }
 export type Position = {
   x: number;
@@ -97,7 +107,8 @@ export type EdgeElement = {
 };
 export type Loopy = {
   nodes: NodeElement[],
-  texts: TextElement[]
+  texts: TextElement[],
+  dimensions: Position
 }
 
 //GeometryTypes

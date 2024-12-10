@@ -1,4 +1,4 @@
-import { NodeConfiguration, NodeElement, TextElement } from '@/datatypes/commondatatypes'
+import { NodeConfiguration, NodeElement, Signal, TextElement } from '@/datatypes/commondatatypes'
 import React, { useReducer } from 'react'
 
 export const globalReducer = (state: any, action: any)=>{
@@ -12,8 +12,10 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: action.data,
                 edgeEditingIndex: state.config.edgeEditingIndex,
+                simulationSpeed: state.config.simulationSpeed,
                 nodes: state.config.nodes,
-                texts: state.config.texts
+                texts: state.config.texts,
+                signals: state.config.signals
             }}
         }
         case "CHANGE_EDGE_EDITING_INDEX":{
@@ -22,8 +24,10 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: action.data,
+                simulationSpeed: state.config.simulationSpeed,
                 nodes: state.config.nodes,
-                texts: state.config.texts
+                texts: state.config.texts,
+                signals: state.config.signals
             }}
         }
         case "CHANGE_ACTION_MODE":{
@@ -32,8 +36,10 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: state.config.edgeEditingIndex,
+                simulationSpeed: state.config.simulationSpeed,
                 nodes: state.config.nodes,
-                texts: state.config.texts
+                texts: state.config.texts,
+                signals: state.config.signals
             }}
         }
         case "CHANGE_EDIT_MODE":{
@@ -42,8 +48,10 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: action.data,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: state.config.edgeEditingIndex,
+                simulationSpeed: state.config.simulationSpeed,
                 nodes: state.config.nodes,
-                texts: state.config.texts
+                texts: state.config.texts,
+                signals: state.config.signals
             }}
         }
         case "EDIT":{
@@ -52,8 +60,10 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: state.config.edgeEditingIndex,
+                simulationSpeed: state.config.simulationSpeed,
                 nodes: action.data,
-                texts: state.config.texts
+                texts: state.config.texts,
+                signals: state.config.signals
             }}
         }
         case "EDIT_TEXTS":{
@@ -62,8 +72,34 @@ export const globalReducer = (state: any, action: any)=>{
                 editMode: state.config.editMode,
                 editingIndex: state.config.editingIndex,
                 edgeEditingIndex: state.config.edgeEditingIndex,
+                simulationSpeed: state.config.simulationSpeed,
                 nodes: state.config.nodes,
-                texts: action.data
+                texts: action.data,
+                signals: state.config.signals
+            }}
+        }
+        case "EDIT_SIGNALS":{
+            return { ...state, config: {
+                actionMode: state.config.actionMode,
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                edgeEditingIndex: state.config.edgeEditingIndex,
+                simulationSpeed: state.config.simulationSpeed,
+                nodes: state.config.nodes,
+                texts: state.config.texts,
+                signals: action.data
+            }}
+        }
+        case "EDIT_SPEED":{
+            return { ...state, config: {
+                actionMode: state.config.actionMode,
+                editMode: state.config.editMode,
+                editingIndex: state.config.editingIndex,
+                edgeEditingIndex: state.config.edgeEditingIndex,
+                simulationSpeed: action.data,
+                nodes: state.config.nodes,
+                texts: state.config.texts,
+                signals: state.config.signals
             }}
         }
         default:
@@ -81,6 +117,7 @@ const initialNode: NodeConfiguration = {
 
 const initialNodes: NodeElement[] = []
 const initialTexts: TextElement[] = []
+const initialSignals: Signal[] = []
 
 const initialAppState: any = {
     config: {
@@ -88,8 +125,10 @@ const initialAppState: any = {
         editMode: "node",
         editingIndex: -1,
         edgeEditingIndex: -1,
+        simulationSpeed: "50",
         nodes: initialNodes,
-        texts: initialTexts
+        texts: initialTexts,
+        signals: initialSignals
     }
 }
 

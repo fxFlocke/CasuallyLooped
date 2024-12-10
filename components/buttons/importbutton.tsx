@@ -1,4 +1,5 @@
 import { Loopy } from '@/datatypes/commondatatypes'
+import { AdjustNodePositions, AdjustTextPositions } from '@/functionality/geometry'
 import { AppContext } from '@/state/global'
 import { Description, Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { useContext, useState } from 'react'
@@ -20,8 +21,8 @@ export function ImportButton() {
         if(file !== null && file !== undefined){
             let loopyData = await file.text()
             let loopy: Loopy = JSON.parse(loopyData)
-            dispatch({type: "EDIT", data: loopy.nodes})
-            dispatch({type: "EDIT_TEXTS", data: loopy.texts})
+            dispatch({type: "EDIT", data: AdjustNodePositions(loopy.nodes, loopy.dimensions, {x: window.innerWidth, y: window.innerHeight})})
+            dispatch({type: "EDIT_TEXTS", data: AdjustTextPositions(loopy.texts, loopy.dimensions, {x: window.innerWidth, y: window.innerHeight})})
         }
     }
 
@@ -46,7 +47,6 @@ export function ImportButton() {
               <div className="mt-2 text-sm/6 text-white/50 grid grid-cols-1 place-items-center py-2">
                 <p>Import a JSON-File from your local Computer & start editing</p>
                 <p><input className='pl-16' name='yes' type='file' accept='application/json' onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
-                console.log(e)
                 if(e.target.files !== null && e.target.files.length > 0){
                     setFile(e.target.files[0])
                 }

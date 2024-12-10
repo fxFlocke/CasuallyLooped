@@ -4,18 +4,20 @@ import { Topbar } from "@/components/bars/topbar";
 import {
   NodeElement, EdgeElement, EdgeReference,
   TextElement,
-  Signal
+  Signal,
+  EdgeGeometry
 } from "@/datatypes/commondatatypes";
 import { DrawNode } from "@/functionality/draw/drawNode";
 import { DrawEdge } from "@/functionality/draw/drawEdge";
 import { Draw, Point, useClickMove } from "@/hooks/usedraw";
 import { Node } from "@/datatypes/commondatatypes";
 import { AppContext } from "@/state/global";
-import { CascadeNodeDragToEdges, DragFromToEdge, DragSelfToSelfEdge, IsPointInUpperHalf, ScaleCanvasForDevicePixelRatio, ScaleElements } from "@/functionality/geometry";
+import { CascadeNodeDragToEdges, DragFromToEdge, DragSelfToSelfEdge, GetArrowLength, IsPointInUpperHalf, ScaleCanvasForDevicePixelRatio, ScaleElements } from "@/functionality/geometry";
 import { CreateEdgeElement, CreateNodeElement } from "@/functionality/creator";
-import { getEdgeByPoint, getEdgeIndexByID, getElementByPoint, getNodeByPoint, getNodeIndexByID, getNoteByPoint, isPointInCanvas } from "@/functionality/searcher";
+import { getEdgeByID, getEdgeByPoint, getEdgeIndexByID, getElementByPoint, getNodeByID, getNodeByPoint, getNodeIndexByID, getNoteByPoint, GetSignalCountOnEdge, isPointInCanvas } from "@/functionality/searcher";
 import { DrawErase, DrawInk } from "@/functionality/draw/drawInk";
 import { DrawNote } from "@/functionality/draw/drawText";
+import { DrawSignal } from "@/functionality/draw/drawSignal";
 
 var globalNodeID: number = 0;
 var globalEdgeID: number = 0;
@@ -23,18 +25,14 @@ var activePoints: Point[] = [];
 var preventClickAction = false;
 var textClicked = false
 var textClickTime = 0
-var hoverNode = -1
-var hoverControl = 0
 const lineColor = "#FFF"
 
-export function Loopy() {
+export const Loopy: React.FC = () => {
 
   const { canvasRef, onMouseDown, mouseClick, mouseMove, windowClick, clear, zoom } = useClickMove(handleClickMove);
   const [dragNode, setDragNode] = useState(-1)
   const [dragEdge, setDragEdge] = useState(-1)
   const [dragText, setDragText] = useState(-1)
-  const [simulate, setSimulate] = useState(false)
-  const [signals, setSignals] = useState<Signal[]>()
   const [appState, dispatch] = useContext(AppContext);
 
   useEffect(() => {
@@ -80,14 +78,11 @@ export function Loopy() {
   }, [mouseMove])
 
   useEffect(() => {
-    if(!simulate){
-      return
+    if(appState.config.editMode !== "simulate"){
+      DrawGeometries()
+    }else{
+      DrawSimulation()
     }
-    DrawSimulation()
-  }, [signals])
-
-  useEffect(() => {
-    DrawGeometries()
   }, [appState])
 
   return (
@@ -140,7 +135,6 @@ export function Loopy() {
     dispatch({type: "CHANGE_EDITING_INDEX", data: appState.config.nodes[nodeIndex].node.id})
     dispatch({type: "CHANGE_EDGE_EDITING_INDEX", data: edgeElement.edge.id})
     dispatch({type: "EDIT", data: nodes})
-    console.log("node after edge creation: ", nodes)
   }
 
   function DrawGeometries(){
@@ -176,6 +170,46 @@ export function Loopy() {
   }
 
   function DrawSimulation(){
+    if(appState.config.nodes === undefined){
+      return
+    }
+    let ctx = canvasRef.current?.getContext("2d")
+    if (ctx === undefined || ctx == null){
+      return
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    let nodes = appState.config.nodes
+    let signals = appState.config.signals
+    let editingIndex = -1
+    let edgeEditingIndex = -1
+    let editMode = ""
+    clear()
+    for(let i = 0; i < appState.config.texts.length; i++){
+      let text = appState.config.texts[i]
+      if(appState.config.editMode === "text" && (appState.config.editingIndex) === i){
+        DrawNote(ctx, text.text, text.pos.x, text.pos.y, true)
+      }else{
+        DrawNote(ctx, text.text, text.pos.x, text.pos.y, false)
+      }
+    }
+    for (let i = 0; i < appState.config.nodes.length; i++){
+      for (let j = 0; j < appState.config.nodes[i].edges.length; j++){
+        DrawEdge(ctx, appState.config.nodes[i].edges[j], edgeEditingIndex, editMode, signals, nodes)
+      }
+    }
+    for (let i = 0; i < appState.config.nodes.length; i++){
+      DrawNode(ctx, appState.config.nodes[i], editingIndex, editMode, appState.config.actionMode)
+    }
+
+    if(signals.length > 0){
+      for(let k = 0; k < signals.length; k++){
+        let node = getNodeByID(signals[k].identifiers.nodeID, nodes)
+        let edgeIndex = getEdgeIndexByID(signals[k].identifiers.edgeID, node!.edges)
+        signals = updateSignal(signals, k, node!.edges[edgeIndex])
+      }
+      dispatch({type: "EDIT_SIGNALS", data: signals})
+    }
 
   }
 
@@ -233,7 +267,6 @@ export function Loopy() {
   //INK-CLICK
   function handleInkClick(){
     if(appState.config.nodes === undefined || preventClickAction === true){
-      console.log("returned from prevention")
       preventClickAction = false
       return
     }
@@ -276,17 +309,13 @@ export function Loopy() {
       dispatch({type: "CHANGE_EDITING_INDEX", data: textIndex})
     }
 
-    console.log(textClicked)
-
     if((textClickTime - new Date().getTime()) < -500){
       textClicked = true
       textClickTime = new Date().getTime()
-      console.log("out for new set")
       return
     }
 
     if(!textClicked){
-      console.log("out for to slow")
       return
     }
 
@@ -312,8 +341,10 @@ export function Loopy() {
     }
     let signal = IsPointInUpperHalf({ x: mouseMove.x, y: mouseMove.y }, nodes[nodeIndex].node.pos, 30)
     if(signal !== 0){
-      
-      sendSignal(nodeIndex, signal)
+      if(appState.config.editMode !== "simulate"){
+        dispatch({type: "CHANGE_EDIT_MODE", data: "simulate"})
+      }
+      takeSignal(nodeIndex, (signal * 0.16))
     }
   }
 
@@ -517,20 +548,54 @@ export function Loopy() {
 
   //Simulation
 
-  function sendSignal(nodeIndex: number, direction: number){
-    if(!simulate){
-      setSimulate(true)
-    }
-    let signal: Signal = {
-      strength: 1,
-      position: {
-        x: 0,
-        y: 0
+  function takeSignal(nodeIndex: number, strength: number){
+    let nodes = appState.config.nodes
+    let signals = appState.config.signals
+    nodes[nodeIndex].config.startValue = decideNodeValue(nodes[nodeIndex].config.startValue,  strength)
+    dispatch({type: "EDIT", data: nodes})
+    DrawGeometries()
+    for(let i = 0; i < nodes[nodeIndex].edges.length; i++){
+      let edge = nodes[nodeIndex].edges[i].edge
+      let signalCount = GetSignalCountOnEdge(signals, edge.id)
+      if(signalCount < 5){
+        if((edge.allowance === 1 || edge.allowance === 0) && (strength > 0) ){
+          sendSignal(edge.from, edge.id, edge.to, edge.impact)
+        } else if ((edge.allowance === -1 || edge.allowance === 0) && (strength < 0)){
+          sendSignal(edge.from, edge.id, edge.to, edge.impact)
+        }
       }
     }
-    let signals: Signal[] = []
+  }
+
+  function sendSignal(nodeID: number, edgeID: number, receiverID: number, impact: number){
+    let signal: Signal = {
+      identifiers: {
+        strength: impact,
+        nodeID: nodeID,
+        edgeID: edgeID,
+        receiverID: receiverID,
+      },
+      delta: decideDelta(impact),
+      position: 0,
+      scale: Math.abs(decideDelta(impact)),
+    } 
+    let signals = appState.config.signals
     signals.push(signal)
-    setSignals(signals)
+    dispatch({type: "EDIT_SIGNALS", data: signals})
+  }
+
+  function updateSignal(signals: Signal[], signalIndex: number, edge: EdgeElement): Signal[]{
+    let arrowLength = GetArrowLength(edge)
+    let nodes = appState.config.nodes
+    if(signals[signalIndex].position >= 1){
+      let signal = signals[signalIndex]
+      signals.splice(signalIndex, 1)
+      let nodeIndex = getNodeIndexByID(signal.identifiers.receiverID, nodes)
+      takeSignal(nodeIndex, signal.identifiers.strength)
+    } else {
+      signals[signalIndex].position += (1  / (arrowLength * 3 * decideSpeed()))
+    }
+    return signals
   }
 
   function handleControlHover(){
@@ -580,6 +645,52 @@ export function Loopy() {
     }
     return false
   }
+
+  function decideDelta(impact: number){
+   if(impact < 0){
+    return -0.33
+   } else{
+    return 0.33
+   }
+  }
+
+  function decideNodeValue(value: number, signal: number): number {
+    if((value + (signal * 0.16)) > 1){
+      return 1
+    } else if ((value + (signal * 0.16)) < 0){
+      return 0
+    }
+    return (value + (signal * 0.16))
+   }
+
+   function decideSpeed(){
+    switch(appState.config.simulationSpeed){
+      case "0":
+        return 100
+      case "10":
+        return 5
+      case "20":
+        return 2
+      case "30":
+        return 1.5
+      case "40":
+        return 1.2
+      case "50":
+        return 1
+      case "60":
+        return 0.8
+      case "70":
+        return 0.6
+      case "80":
+        return 0.4
+      case "90":
+        return 0.2
+      case "100":
+        return 0.1
+      default:
+        return 1
+      }
+   }
 }
 
 

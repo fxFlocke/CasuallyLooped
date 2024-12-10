@@ -43,7 +43,7 @@ export function ExportButton() {
                 <button
                   className="flex justify-center items-center gap-2 rounded-md bg-[#2b2d2d] py-1.5 px-3 text-sm/6 font-semibold text-white shadow-white/10 focus:outline-none content-around ease-in cursor-pointer hover:scale-95 duration-300 hover:shadow-white hover:shadow-outer overflow-hidden shadow-sm"
                   onClick={() => {
-                    ExportDiagramAsJSON({ nodes: appState.config.nodes, texts: appState.config.texts})
+                    ExportDiagramAsJSON({ nodes: appState.config.nodes, texts: appState.config.texts, dimensions: { x: window.innerWidth, y: window.innerHeight } })
                     close()
                   }}>
                   Yes

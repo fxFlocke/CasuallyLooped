@@ -2,6 +2,7 @@ import { AppContext } from '@/state/global';
 import { Description, Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { useContext, useState } from 'react'
 import Loopy from '../../public/files/loopy.json'
+import { AdjustNodePositions, AdjustTextPositions } from '@/functionality/geometry';
 
 export function ExampleButton() {
     let [isOpen, setIsOpen] = useState(false)
@@ -16,8 +17,8 @@ export function ExampleButton() {
     }
 
     function loadExample(){
-        dispatch({type: "EDIT", data: Loopy.nodes})
-        dispatch({type: "EDIT_TEXTS", data: Loopy.texts})
+      dispatch({type: "EDIT", data: AdjustNodePositions(Loopy.nodes, Loopy.dimensions, {x: window.innerWidth, y: window.innerHeight})})
+      dispatch({type: "EDIT_TEXTS", data: AdjustTextPositions(Loopy.texts, Loopy.dimensions, {x: window.innerWidth, y: window.innerHeight})})
     }
 
     return (
@@ -36,7 +37,7 @@ export function ExampleButton() {
               className="w-full max-w-md bg-[#2b2d2d] shadow-lg shadow-white border-white border-2 rounded-xl bg-white/5 p-6 backdrop-blur-2xl duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0"
             >
               <DialogTitle as="h3" className="text-base/7 font-medium text-white flex justify-center py-2 bg-opacity-20">
-                Load "Liquidity Pool" Example
+                Load `Liquidity Pool` Example
               </DialogTitle>
               <div className="mt-2 text-sm/6 text-white/50 grid grid-cols-1 place-items-center py-2">
                 <p>This example provieds an overview of</p>
