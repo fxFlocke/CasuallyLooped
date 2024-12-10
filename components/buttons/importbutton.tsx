@@ -45,7 +45,7 @@ export function ImportButton() {
                 Import a Diagram
               </DialogTitle>
               <div className="mt-2 text-sm/6 text-white/50 grid grid-cols-1 place-items-center py-2">
-                <p>Import a JSON-File from your local Computer & start editing</p>
+                <p>Import a JSON-File from your local Computer & start editing!</p>
                 <p><input className='pl-16' name='yes' type='file' accept='application/json' onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
                 if(e.target.files !== null && e.target.files.length > 0){
                     setFile(e.target.files[0])
