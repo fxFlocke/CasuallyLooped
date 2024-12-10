@@ -23,7 +23,7 @@ export function SimulationBar() {
   return (
     <>
       <div className="flex">
-        <div onClick={() => playPauseSimulation()} className="bg-white mx-6">
+        <div onClick={() => playPauseSimulation()} className="mx-6">
           <EditingOption iconPath="/icons/pause.png"/>
         </div>
         <div className="mr-6">
